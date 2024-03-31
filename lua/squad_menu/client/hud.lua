@@ -246,7 +246,7 @@ local ringMat = Material( "squad_menu/ring.png" )
 DrawRing = function( ply )
     if not ringWhitelist[ply] then return end
 
-    Start3D2D( ply:GetPos(), ringAngle, 0.06 )
+    Start3D2D( ply:GetPos(), ringAngle, 0.08 )
 
     SetMaterial( ringMat )
     SetColor( squadColor:Unpack() )
