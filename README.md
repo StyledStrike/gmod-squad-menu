@@ -12,4 +12,4 @@ A basic squad/party creation addon for Garry's Mod.
 
 # Contributing
 
-Before you open a pull request, if it deals with Lua code, please read [this](https://github.com/StyledStrike/gmod-squad-menu/blob/master/.github/pull_request_template.md).
+Before you open a pull request, if it deals with Lua code, please read [this](https://github.com/StyledStrike/gmod-squad-menu/blob/main/.github/pull_request_template.md).
