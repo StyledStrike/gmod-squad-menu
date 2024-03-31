@@ -31,7 +31,7 @@ CreateConVar(
     "10",
     FCVAR_ARCHIVE + FCVAR_REPLICATED + FCVAR_NOTIFY,
     "Limits how many members a single squad can have.",
-    0, 100
+    1, 100
 )
 
 CreateConVar(
