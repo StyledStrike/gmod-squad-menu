@@ -16,6 +16,14 @@ commands[SquadMenu.SETUP_SQUAD] = function( ply )
     local squadId = ply:GetSquadID()
     local data = SquadMenu.ReadTable()
 
+    if type( data.name ) == "string" then
+        local shouldAllow, name = hook.Run( "ShouldAllowSquadName", data.name, ply )
+
+        if shouldAllow == false then
+            data.name = name or ""
+        end
+    end
+
     -- Update existing squad, if this ply is the leader.
     if squadId ~= -1 then
         local squad = SquadMenu:GetSquad( squadId )
