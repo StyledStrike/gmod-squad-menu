@@ -115,11 +115,7 @@ function SquadMenu:OnLeaveSquad( reason )
     self.joinRequests = nil
     self.otherMembers = nil
     self:RemoveMembersHUD()
-
-    if IsValid( self.squadMenuFrame ) then
-        self:RequestSquadListUpdate()
-        self:UpdateSquadStatePanel()
-    end
+    self:CloseSquadMenu()
 end
 
 ----------
