@@ -169,11 +169,14 @@ function SquadMenu:UpdateSquadStatePanel()
 end
 
 local function SetListStatus( text )
-    local labelStatus = vgui.Create( "DLabel", SquadMenu.squadMenuFrame.listPanel )
+    local parent = SquadMenu.squadMenuFrame.listPanel
+
+    local labelStatus = vgui.Create( "DLabel", parent )
     labelStatus:SetText( L( text ) )
+    labelStatus:SetContentAlignment( 5 )
+    labelStatus:SizeToContents()
     labelStatus:Dock( TOP )
     labelStatus:DockMargin( 0, 8, 0, 0 )
-    labelStatus:SetContentAlignment( 5 )
 
     ApplyTheme( labelStatus )
 end
@@ -289,7 +292,7 @@ function SquadMenu:UpdateRequestsPanel()
     if squad.leaderId ~= LocalPlayer():SteamID() then return end
 
     requestsPanel = vgui.Create( "DPanel", self.squadMenuFrame )
-    requestsPanel:SetTall( 280 )
+    requestsPanel:SetTall( 290 )
     requestsPanel:Dock( BOTTOM )
     requestsPanel:DockMargin( 0, 0, 0, 2 )
 
@@ -317,6 +320,18 @@ function SquadMenu:UpdateRequestsPanel()
         return
     end
 
+    local labelMemberCount = vgui.Create( "DLabel", panelHeader )
+    labelMemberCount:Dock( RIGHT )
+
+    ApplyTheme( labelMemberCount )
+
+    local function UpdateMemberCount( current )
+        labelMemberCount:SetText( L( "slots" ) .. ": " .. current .. "/" .. SquadMenu.GetMemberLimit() )
+        labelMemberCount:SizeToContents()
+    end
+
+    UpdateMemberCount( squad.memberCount )
+
     if squad.isPublic then
         labelRequests:SetText( L"no_requests_needed" )
         labelRequests:SizeToContents()
@@ -332,9 +347,6 @@ function SquadMenu:UpdateRequestsPanel()
     labelRequests:SetText( L"requests_list" )
     labelRequests:SizeToContents()
 
-    local labelCount = vgui.Create( "DLabel", panelHeader )
-    labelCount:Dock( RIGHT )
-
     local buttonAccept
     local acceptedPlayers = {}
 
@@ -348,11 +360,10 @@ function SquadMenu:UpdateRequestsPanel()
         self:UpdateRequestsPanel()
     end
 
-    local function UpdateCount( current )
-        labelCount:SetText( L( "slots_left" ) .. " " .. current .. "/" .. memberLimit )
-        labelCount:SizeToContents()
+    local function UpdateAcceptedCount( count )
+        UpdateMemberCount( squad.memberCount + count )
 
-        if current == 0 then
+        if count == 0 then
             if buttonAccept then
                 buttonAccept:Remove()
                 buttonAccept = nil
@@ -371,7 +382,7 @@ function SquadMenu:UpdateRequestsPanel()
         ApplyTheme( buttonAccept )
     end
 
-    UpdateCount( 0 )
+    UpdateAcceptedCount( 0 )
 
     local requestsScroll = vgui.Create( "DScrollPanel", requestsPanel )
     requestsScroll:Dock( FILL )
@@ -406,7 +417,7 @@ function SquadMenu:UpdateRequestsPanel()
             end
         end
 
-        UpdateCount( count )
+        UpdateAcceptedCount( count )
     end
 
     local players = SquadMenu.AllPlayersBySteamID()
