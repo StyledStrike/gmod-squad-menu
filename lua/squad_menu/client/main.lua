@@ -126,7 +126,23 @@ commands[SquadMenu.BROADCAST_EVENT] = function()
     local data = SquadMenu.JSONToTable( net.ReadString() )
     local event = data.eventName
 
-    if event == "squad_created" or event == "squad_deleted" then
+    if event == "player_joined_squad" then
+        if SquadMenu.currentSquadId == data.squadId then return end
+
+        -- Remove this player from my requests list
+        local joinRequests = SquadMenu.joinRequests
+        if not joinRequests then return end
+
+        for i, id in ipairs( joinRequests ) do
+            if id == data.playerId then
+                table.remove( joinRequests, i )
+                break
+            end
+        end
+
+        SquadMenu:UpdateRequestsPanel()
+
+    elseif event == "squad_created" or event == "squad_deleted" then
         -- For now, just update the squad list (if it's open)
         SquadMenu:RequestSquadListUpdate()
     end

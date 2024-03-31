@@ -158,6 +158,18 @@ function Squad:AddMember( ply, dontSync )
     if not dontSync then
         self:SyncWithMembers()
     end
+
+    local id = ply:SteamID()
+
+    -- Check for and remove player from join requests on all squads
+    for _, squad in pairs( SquadMenu.squads ) do
+        squad.requests[id] = nil
+    end
+
+    SquadMenu.BroadcastEvent( "player_joined_squad", {
+        squadId = self.id,
+        playerId = id
+    } )
 end
 
 --- Remove a player from this squad's members list.
