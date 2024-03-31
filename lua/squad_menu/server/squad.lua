@@ -5,6 +5,7 @@ SquadMenu.lastSquadId = SquadMenu.lastSquadId or 0
 SquadMenu.blockDamage = blockDamage
 
 hook.Add( "PlayerShouldTakeDamage", "SquadMenu.BlockFriendlyFire", function( ply, attacker )
+    if not attacker.GetSquadID then return end
     local id = ply:GetSquadID()
 
     if id ~= -1 and ply ~= attacker and blockDamage[id] and id == attacker:GetSquadID() then
