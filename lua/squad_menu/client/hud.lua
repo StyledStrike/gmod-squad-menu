@@ -1,5 +1,5 @@
 local L = SquadMenu.GetLanguageText
-local DrawRing, DrawMemberInfo
+local DrawRing, DrawMemberInfo, HideTargetInfo
 
 local squadColor = Color( 0, 0, 0 )
 local ringWhitelist, drawDistance
@@ -16,6 +16,7 @@ function SquadMenu:RemoveMembersHUD()
 
     hook.Remove( "PrePlayerDraw", "SquadMenu.DrawRing" )
     hook.Remove( "HUDPaint", "SquadMenu.DrawMemberInfo" )
+    hook.Remove( "HUDDrawTargetID", "SquadMenu.HideTargetInfo" )
 end
 
 function SquadMenu:CreateMembersHUD()
@@ -78,6 +79,7 @@ function SquadMenu:UpdateHUDMembers( memberIds, printMessages )
     end
 
     hook.Add( "HUDPaint", "SquadMenu.DrawMemberInfo", DrawMemberInfo )
+    hook.Add( "HUDDrawTargetID", "SquadMenu.HideTargetInfo", HideTargetInfo )
 
     local localPlayer = LocalPlayer()
     local players = SquadMenu.AllPlayersBySteamID()
@@ -300,4 +302,20 @@ DrawMemberInfo = function()
     end
 
     SetAlphaMultiplier( 1 )
+end
+
+----------
+
+local LocalPlayer = LocalPlayer
+
+HideTargetInfo = function()
+    local trace = util.TraceLine( util.GetPlayerTrace( LocalPlayer() ) )
+    if not trace.Hit or not trace.HitNonWorld then return end
+
+    local ply = trace.Entity
+    if not ply:IsPlayer() then return end
+
+    if ringWhitelist[ply] and EyePos():DistToSqr( ply:EyePos() ) < drawDistance then
+        return false
+    end
 end
