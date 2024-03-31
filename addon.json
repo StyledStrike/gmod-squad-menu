@@ -1,0 +1,13 @@
+{
+	"title": "Simple Squad Menu",
+	"type": "ServerContent",
+	"tags":	["realism"],
+	"ignore": [
+		".git*",
+		"*.txt",
+		"*.md",
+		"glualint.json",
+        ".editorconfig",
+		"LICENSE"
+	]
+}
