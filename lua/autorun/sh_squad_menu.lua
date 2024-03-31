@@ -36,7 +36,7 @@ CreateConVar(
 
 CreateConVar(
     "squad_name_render_distance",
-    "1000",
+    "2000",
     FCVAR_ARCHIVE + FCVAR_REPLICATED + FCVAR_NOTIFY,
     "Sets the render distance of squad members' names.",
     100, 10000
@@ -141,7 +141,7 @@ if CLIENT then
     end
 
     function SquadMenu.ChatPrint( ... )
-        chat.AddText( SquadMenu.THEME_COLOR, "[Squad Menu] ", Color( 255, 255, 255 ), ... )
+        chat.AddText( SquadMenu.THEME_COLOR, "[" .. SquadMenu.GetLanguageText( "title" )  .. "] ", Color( 255, 255, 255 ), ... )
     end
 
     -- Shared files
