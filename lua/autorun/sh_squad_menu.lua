@@ -121,10 +121,6 @@ if SERVER then
     resource.AddWorkshop( "3207278246" )
     util.AddNetworkString( "squad_menu.command" )
 
-    -- Shared files
-    include( "squad_menu/sh_player.lua" )
-    AddCSLuaFile( "squad_menu/sh_player.lua" )
-
     -- Server files
     include( "squad_menu/server/squad.lua" )
     include( "squad_menu/server/network.lua" )
@@ -145,12 +141,15 @@ if CLIENT then
         chat.AddText( SquadMenu.THEME_COLOR, "[" .. SquadMenu.GetLanguageText( "title" )  .. "] ", Color( 255, 255, 255 ), ... )
     end
 
-    -- Shared files
-    include( "squad_menu/sh_player.lua" )
-
     -- Client files
     include( "squad_menu/client/theme.lua" )
     include( "squad_menu/client/main.lua" )
     include( "squad_menu/client/menu.lua" )
     include( "squad_menu/client/hud.lua" )
+end
+
+local PlayerMeta = FindMetaTable( "Player" )
+
+function PlayerMeta:GetSquadID()
+    return self:GetNWInt( "squad_menu.id", -1 )
 end
