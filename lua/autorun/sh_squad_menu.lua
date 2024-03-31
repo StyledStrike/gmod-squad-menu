@@ -118,6 +118,7 @@ function SquadMenu.ReadTable()
 end
 
 if SERVER then
+    resource.AddWorkshop( "3207278246" )
     util.AddNetworkString( "squad_menu.command" )
 
     -- Shared files
