@@ -2,10 +2,10 @@ name: GLuaLint
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
 
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
   # Allows running this workflow from the Actions tab
   workflow_dispatch:
