@@ -275,6 +275,18 @@ function SquadMenu:UpdateSquadList( squads )
         else
             UpdateButton( buttonJoin, "full_squad", false )
         end
+
+        local labelCount = vgui.Create( "DLabel", p )
+        labelCount:SetText( squad.memberCount .. "/" .. maxMembers )
+        labelCount:SizeToContents()
+        labelCount:Dock( RIGHT )
+        labelCount:DockMargin( 0, 0, 10, 0 )
+
+        local iconCount = vgui.Create( "DImage", p )
+        iconCount:Dock( RIGHT )
+        iconCount:DockMargin( 16, 16, 4, 16 )
+        iconCount:SetWide( 16 )
+        iconCount:SetImage( "icon16/user.png" )
     end
 end
 
