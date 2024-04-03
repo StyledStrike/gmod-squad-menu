@@ -375,14 +375,12 @@ function SquadMenu:UpdateRequestsPanel()
     local function UpdateAcceptedCount( count )
         UpdateMemberCount( squad.memberCount + count )
 
-        if count == 0 then
-            if buttonAccept then
-                buttonAccept:Remove()
-                buttonAccept = nil
-            end
-
-            return
+        if buttonAccept then
+            buttonAccept:Remove()
+            buttonAccept = nil
         end
+
+        if count == 0 then return end
 
         buttonAccept = vgui.Create( "DButton", requestsPanel )
         buttonAccept:SetText( L"accept" )
