@@ -209,7 +209,7 @@ function PANEL:Paint( w, h )
     SetColor( squadColor:Unpack() )
     DrawRect( w - split, 0, split, h )
 
-    SetColor( 60, 60, 60, 240 )
+    SetColor( 0, 0, 0, 240 )
     SetMaterial( matGradient )
     DrawTexturedRect( 0, 0, w - split, h )
 
