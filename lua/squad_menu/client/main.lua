@@ -145,8 +145,20 @@ commands[SquadMenu.BROADCAST_EVENT] = function()
         SquadMenu:UpdateRequestsPanel()
 
     elseif event == "squad_created" or event == "squad_deleted" then
-        -- For now, just update the squad list (if it's open)
+        -- Update the squad list (if it's open)
         SquadMenu:RequestSquadListUpdate()
+
+    elseif event == "members_chat" then
+        local squad = SquadMenu.mySquad
+        if not squad then return end
+
+        local sender = player.GetBySteamID( data.senderId )
+        if not IsValid( sender ) then return end
+
+        local white = Color( 255, 255, 255 )
+
+        chat.AddText( white, "[", squad.color, squad.name, white, "] ",
+            squad.color, sender:Nick(), white, ": ", data.text )
     end
 end
 

@@ -146,3 +146,44 @@ hook.Add( "PlayerDisconnected", "SquadMenu.PlayerCleanup", function( ply )
     local squad = SquadMenu:GetSquad( squadId )
     squad:RemoveMember( ply )
 end )
+
+local prefixes = {}
+
+for _, prefix in ipairs( SquadMenu.CHAT_PREFIXES ) do
+    prefixes[prefix] = true
+end
+
+hook.Add( "PlayerSay", "SquadMenu.RemovePrefix", function( sender, text )
+    local parts = string.Explode( " ", text, false )
+    if not parts[1] or not prefixes[parts[1]] then return end
+
+    local id = sender:GetSquadID()
+
+    if id == -1 then
+        sender:ChatPrint( "You're not in a squad." )
+        return ""
+    end
+
+    table.remove( parts, 1 )
+
+    text = table.concat( parts, " " )
+
+    if text:len() == 0 then
+        sender:ChatPrint( "Please type a message to send to your squad members." )
+        return ""
+    end
+
+    local members = SquadMenu:GetSquad( id ).members
+
+    local data = {
+        eventName = "members_chat",
+        senderId = sender:SteamID(),
+        text = text
+    }
+
+    SquadMenu.StartCommand( SquadMenu.BROADCAST_EVENT )
+    net.WriteString( SquadMenu.TableToJSON( data ) )
+    net.Send( members )
+
+    return ""
+end, HOOK_HIGH )
