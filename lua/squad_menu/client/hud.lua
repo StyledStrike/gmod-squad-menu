@@ -239,22 +239,30 @@ vgui.Register( "Squad_MemberInfo", PANEL, "DPanel" )
 
 ----------
 
-local Start3D2D = cam.Start3D2D
-local End3D2D = cam.End3D2D
+do
+    local Start3D2D = cam.Start3D2D
+    local End3D2D = cam.End3D2D
 
-local ringAngle = Angle( 0, 0, 0 )
-local ringMat = Material( "squad_menu/ring.png" )
+    local ringMaxDist = 3000 * 3000
+    local ringAngle = Angle( 0, 0, 0 )
+    local ringOffset = Vector( 0, 0, 5 )
+    local ringMat = Material( "squad_menu/ring.png" )
 
-DrawRing = function( ply )
-    if not ringWhitelist[ply] then return end
+    DrawRing = function( ply )
+        if not ringWhitelist[ply] then return end
 
-    Start3D2D( ply:GetPos(), ringAngle, 0.08 )
+        local pos = ply:GetPos()
+        local mult = Clamp( pos:DistToSqr( EyePos() ) / ringMaxDist, 0, 1 )
+        local size = 300 + 1000 * mult
 
-    SetMaterial( ringMat )
-    SetColor( squadColor:Unpack() )
-    DrawTexturedRect( -256, -256, 512, 512 )
+        Start3D2D( pos + ringOffset * mult, ringAngle, 0.08 )
 
-    End3D2D()
+        SetMaterial( ringMat )
+        SetColor( squadColor:Unpack() )
+        DrawTexturedRect( -size * 0.5, -size * 0.5, size, size )
+
+        End3D2D()
+    end
 end
 
 ----------
