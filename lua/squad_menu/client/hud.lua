@@ -221,10 +221,10 @@ function PANEL:Paint( w, h )
 
     if self.alive then
         local barH = h * 0.2
-        DrawBar( 2, ( h * 0.5 ) + barH * 0.75, w - split - 4, barH, self.healthAnim, self.armorAnim, self.healAnim )
+        DrawBar( 2, h - barH - 6, w - split - 6, barH, self.healthAnim, self.armorAnim, self.healAnim )
     end
 
-    DrawSimpleText( self.nick, "TargetIDSmall", 2, h * 0.5,
+    DrawSimpleText( self.nick, "TargetIDSmall", 2, 2 + h * 0.5,
         self.alive and colorName or colorLow, 0, self.alive and 4 or 1, 1 )
 end
 
