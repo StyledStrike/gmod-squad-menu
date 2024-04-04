@@ -62,11 +62,13 @@ function SquadMenu:OnJoinSquad( data )
     }
 
     self.joinRequests = {}
-    self.ChatPrint( L"squad_welcome", self.mySquad.color, " " .. data.name )
     self:CloseSquadMenu()
 
     self:CreateMembersHUD()
     self:SetCurrentMembers( data.memberIds )
+
+    self.ChatPrint( L"squad_welcome", self.mySquad.color, " " .. data.name )
+    self.ChatPrint( L"chat_tip", " " .. table.concat( self.CHAT_PREFIXES, ", " ) )
 end
 
 function SquadMenu:OnUpdateSquad( data )
