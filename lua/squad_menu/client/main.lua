@@ -21,7 +21,9 @@ hook.Add( "OnPlayerChat", "SquadMenu.ChatCommand", function( ply, text )
     if ply ~= LocalPlayer() then return end
     if text[1] ~= "!" then return end
 
-    if string.lower( string.Trim( text ) ) == "!squad" then
+    text = string.lower( string.Trim( text ) )
+
+    if text == "!squad" or text == "!party" then
         SquadMenu:OpenSquadMenu()
     end
 end )
