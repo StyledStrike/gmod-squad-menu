@@ -216,10 +216,14 @@ function SquadMenu:UpdateSquadList( squads )
 
     local bgColor = Color( 0, 0, 0 )
     local nameColor = Color( 255, 255, 255 )
+    local playerColor = Color( 160, 160, 160 )
 
     local PaintLine = function( s, w, h )
+        local y = 3 + h * 0.5
+
         draw.RoundedBox( 4, 0, 0, w, h, bgColor )
-        draw.SimpleText( s._name, "Trebuchet18", 48, h * 0.5, nameColor, 0, 1 )
+        draw.SimpleText( s._name, "Trebuchet18", 48, y, nameColor, 0, 4 )
+        draw.SimpleText( s._leaderName, "DefaultSmall", 48, y - 1, playerColor, 0, 3 )
 
         surface.SetDrawColor( s._color:Unpack() )
         surface.DrawRect( 0, 0, 4, h )
