@@ -225,7 +225,7 @@ function SquadMenu:UpdateSquadList( squads )
         draw.SimpleText( s._name, "Trebuchet18", 48, y, nameColor, 0, 4 )
         draw.SimpleText( s._leaderName, "DefaultSmall", 48, y - 1, playerColor, 0, 3 )
 
-        surface.SetDrawColor( s._color:Unpack() )
+        surface.SetDrawColor( s._squadColor:Unpack() )
         surface.DrawRect( 0, 0, 4, h )
     end
 
@@ -253,11 +253,17 @@ function SquadMenu:UpdateSquadList( squads )
         p:Dock( TOP )
         p:DockMargin( 0, 0, 0, 2 )
 
-        p.Paint = PaintLine
         p._id = squad.id
         p._name = squad.name
         p._leaderName = players[squad.leaderId]:Nick()
-        p._color = Color( squad.r, squad.g, squad.b )
+
+        if type( squad.r ) == "number" then
+            p._squadColor = Color( squad.r, squad.g or 255, squad.b or 255 )
+        else
+            p._squadColor = Color( 255, 255, 255 )
+        end
+
+        p.Paint = PaintLine
 
         local icon = vgui.Create( "DImage", p )
         icon:Dock( LEFT )
