@@ -32,77 +32,101 @@ end )
 
 local L = SquadMenu.GetLanguageText
 
-function SquadMenu:SetCurrentMembers( memberIds, printMessages )
-    local otherMembers = {}
-    local players = SquadMenu.AllPlayersBySteamID()
+function SquadMenu:SetMembers( newMembers, printMessages )
+    local members = self.mySquad.members
+    local membersById = self.mySquad.membersById
 
-    for _, id in ipairs( memberIds ) do
-        if players[id] and players[id] ~= LocalPlayer() then
-            otherMembers[#otherMembers + 1] = players[id]
+    local keep = {}
+
+    -- Add new members that we do not have on our end
+    for _, member in ipairs( newMembers ) do
+        local id = member.id
+
+        keep[id] = true
+
+        if not membersById[id] then
+            membersById[id] = member
+            members[#members + 1] = member
+
+            self:AddMemberToHUD( member )
+
+            if printMessages then
+                self.ChatPrint( string.format( L"member_joined", member.name ) )
+            end
         end
     end
 
-    self.otherMembers = otherMembers
-    self:UpdateHUDMembers( memberIds, printMessages )
-end
+    -- Remove members that we have on our end but do not exist in newMembers
+    -- Backwards loop because we use table.remove
+    for i = #members, 1, -1 do
+        local member = members[i]
+        local id = member.id
 
-function SquadMenu:OnJoinSquad( data )
-    self.mySquad = {
-        id = data.id,
-        name = data.name,
-        icon = data.icon,
-        leaderId = data.leaderId,
+        if not keep[id] then
+            membersById[id] = nil
+            table.remove( members, i )
 
-        enableRings = data.enableRings,
-        friendlyFire = data.friendlyFire,
-        isPublic = data.isPublic,
+            self:RemoveMemberFromHUD( member )
 
-        color = Color( data.r, data.g, data.b ),
-        memberCount = #data.memberIds
-    }
-
-    self.joinRequests = {}
-    self:CloseSquadMenu()
-
-    self:CreateMembersHUD()
-    self:SetCurrentMembers( data.memberIds )
-
-    self.ChatPrint( L"squad_welcome", self.mySquad.color, " " .. data.name )
-    self.ChatPrint( L"chat_tip", " " .. table.concat( self.CHAT_PREFIXES, ", " ) )
-end
-
-function SquadMenu:OnUpdateSquad( data )
-    self.mySquad.name = data.name
-    self.mySquad.icon = data.icon
-    self.mySquad.leaderId = data.leaderId
-    self.mySquad.memberCount = #data.memberIds
-
-    self.mySquad.enableRings = data.enableRings
-    self.mySquad.friendlyFire = data.friendlyFire
-    self.mySquad.isPublic = data.isPublic
-
-    self.mySquad.color = Color( data.r, data.g, data.b )
-
-    local existingMembers = {}
-
-    for _, id in ipairs( data.memberIds ) do
-        existingMembers[id] = true
-    end
-
-    -- remove existing members from the join request list
-    local requests = {}
-
-    for _, id in ipairs( self.joinRequests ) do
-        if not existingMembers[id] then
-            requests[#requests + 1] = id
+            if printMessages then
+                self.ChatPrint( string.format( L"member_left", member.name ) )
+            end
         end
     end
 
-    self.joinRequests = requests
+    -- Remove join requests from players in newMembers
+    local requests = self.mySquad.requests
 
-    self:UpdateSquadStatePanel()
-    self:UpdateRequestsPanel()
-    self:SetCurrentMembers( data.memberIds, true )
+    -- Backwards loop because we use table.remove
+    for i = #requests, 1, -1 do
+        local member = requests[i]
+        local id = member.id
+
+        if keep[id] then
+            table.remove( requests, i )
+        end
+    end
+end
+
+function SquadMenu:SetupSquad( data )
+    local squad = self.mySquad or { id = -1 }
+
+    self.mySquad = squad
+
+    local isUpdate = data.id == squad.id
+
+    squad.id = data.id
+    squad.name = data.name
+    squad.icon = data.icon
+    squad.memberCount = data.memberCount
+
+    squad.leaderId = data.leaderId
+    squad.leaderName = data.leaderName
+
+    squad.enableRings = data.enableRings
+    squad.friendlyFire = data.friendlyFire
+    squad.isPublic = data.isPublic
+
+    squad.color = Color( data.r, data.g, data.b )
+
+    if isUpdate then
+        self:UpdateSquadStatePanel()
+        self:UpdateRequestsPanel()
+    else
+        squad.requests = {}
+        squad.members = {}
+        squad.membersById = {}
+
+        self:CloseSquadMenu()
+
+        self.ChatPrint( L"squad_welcome", squad.color, " " .. squad.name )
+        self.ChatPrint( L"chat_tip", " " .. table.concat( self.CHAT_PREFIXES, ", " ) )
+
+        sound.Play( "buttons/combine_button3.wav", Vector(), 0, 120, 0.75 )
+    end
+
+    self:UpdateMembersHUD()
+    self:SetMembers( data.members, isUpdate )
 end
 
 function SquadMenu:OnLeaveSquad( reason )
@@ -113,11 +137,12 @@ function SquadMenu:OnLeaveSquad( reason )
 
     if self.mySquad then
         self.ChatPrint( L( reasonText[reason] or "left_squad" ) )
+
+        sound.Play( "buttons/combine_button2.wav", Vector(), 0, 120, 0.75 )
     end
 
     self.mySquad = nil
-    self.joinRequests = nil
-    self.otherMembers = nil
+
     self:RemoveMembersHUD()
     self:CloseSquadMenu()
 end
@@ -130,16 +155,18 @@ commands[SquadMenu.BROADCAST_EVENT] = function()
     local data = SquadMenu.JSONToTable( net.ReadString() )
     local event = data.eventName
 
+    SquadMenu.PrintF( "Event received: %s", event )
+
     if event == "player_joined_squad" then
-        if SquadMenu.currentSquadId == data.squadId then return end
+        local squad = SquadMenu.mySquad
+        if not squad then return end
 
         -- Remove this player from my requests list
-        local joinRequests = SquadMenu.joinRequests
-        if not joinRequests then return end
+        local requests = squad.requests
 
-        for i, id in ipairs( joinRequests ) do
-            if id == data.playerId then
-                table.remove( joinRequests, i )
+        for i, member in ipairs( requests ) do
+            if data.playerId == member.id then
+                table.remove( requests, i )
                 break
             end
         end
@@ -154,13 +181,10 @@ commands[SquadMenu.BROADCAST_EVENT] = function()
         local squad = SquadMenu.mySquad
         if not squad then return end
 
-        local sender = player.GetBySteamID( data.senderId )
-        if not IsValid( sender ) then return end
-
         local white = Color( 255, 255, 255 )
 
         chat.AddText( white, "[", squad.color, squad.name, white, "] ",
-            squad.color, sender:Nick(), white, ": ", data.text )
+            squad.color, data.senderName, white, ": ", data.text )
     end
 end
 
@@ -170,44 +194,43 @@ end
 
 commands[SquadMenu.SETUP_SQUAD] = function()
     local data = SquadMenu.ReadTable()
-
-    if SquadMenu.currentSquadId == data.id then
-        SquadMenu:OnUpdateSquad( data )
-    else
-        SquadMenu:OnJoinSquad( data )
-    end
-
-    SquadMenu.currentSquadId = data.id
+    SquadMenu:SetupSquad( data )
 end
 
 commands[SquadMenu.LEAVE_SQUAD] = function()
-    local reason = net.ReadUInt( 2 )
-
+    local reason = net.ReadUInt( 3 )
     SquadMenu:OnLeaveSquad( reason )
-    SquadMenu.currentSquadId = nil
 end
 
 commands[SquadMenu.REQUESTS_LIST] = function()
-    local joinRequests = SquadMenu.joinRequests
-    if not joinRequests then return end
+    local squad = SquadMenu.mySquad
+    if not squad then return end
 
-    -- Turn the current sequential list of requester IDs into a key-value dictionary
-    local existingIds = {}
+    local requests = squad.requests
 
-    for _, id in ipairs( joinRequests ) do
-        existingIds[id] = true
+    -- Remember which players have requested before
+    local alreadyRequested = {}
+
+    for _, member in ipairs( requests ) do
+        alreadyRequested[member.id] = true
     end
 
     -- Compare the new request IDs against what we already got
     local requestIds = SquadMenu.ReadTable()
-    local players = SquadMenu.AllPlayersBySteamID()
+    local newCount = 0
 
-    for _, id in ipairs( requestIds ) do
-        if not existingIds[id] and players[id] then
-            -- This is a new player for us
-            joinRequests[#joinRequests + 1] = id
-            SquadMenu.ChatPrint( string.format( L"request_message", players[id]:Nick() ) )
+    for _, member in ipairs( requestIds ) do
+        if not alreadyRequested[member.id] then
+            -- This is a new request for us
+            requests[#requests + 1] = member
+            newCount = newCount + 1
+
+            SquadMenu.ChatPrint( string.format( L"request_message", member.name ) )
         end
+    end
+
+    if newCount > 0 then
+        sound.Play( "buttons/combine_button1.wav", Vector(), 0, 120, 0.8 )
     end
 
     SquadMenu:UpdateRequestsPanel()

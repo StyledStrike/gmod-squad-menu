@@ -25,6 +25,7 @@ function SquadMenu:DeleteSquad( id )
         self.blockDamage[id] = nil
 
         self.PrintF( "Deleted squad #%d", id )
+
         self.BroadcastEvent( "squad_deleted", {
             id = id
         } )
@@ -60,6 +61,7 @@ function SquadMenu:CreateSquad( leader )
     }, Squad )
 
     self.PrintF( "Created squad #%d for %s", id, leader:SteamID() )
+
     self.BroadcastEvent( "squad_created", {
         id = id
     } )
@@ -71,9 +73,10 @@ end
 function Squad:GetBasicInfo()
     return {
         id = self.id,
+        memberCount = #self.members,
+
         leaderId = self.leader:SteamID(),
         leaderName = self.leader:Nick(),
-        memberCount = #self.members,
 
         name = self.name,
         icon = self.icon,
@@ -127,18 +130,17 @@ function Squad:SetBasicInfo( info )
 end
 
 --- Send details and a list of members to all squad members.
---- Will convert player entities to SteamIDs.
 function Squad:SyncWithMembers()
     if #self.members == 0 then return end
 
-    local memberIds = {}
+    local members = {}
 
     for i, member in ipairs( self.members ) do
-        memberIds[i] = member:SteamID()
+        members[i] = { id = member:SteamID(), name = member:Nick() }
     end
 
     local squad = self:GetBasicInfo()
-    squad.memberIds = memberIds
+    squad.members = members
 
     SquadMenu.StartCommand( SquadMenu.SETUP_SQUAD )
     SquadMenu.WriteTable( squad )
@@ -188,15 +190,15 @@ function Squad:RemoveMember( ply, reasonId )
 
     if reasonId ~= nil then
         SquadMenu.StartCommand( SquadMenu.LEAVE_SQUAD )
-        net.WriteUInt( reasonId, 2 )
+        net.WriteUInt( reasonId, 3 )
         net.Send( ply )
     end
 
     self:SyncWithMembers()
 end
 
---- Add a player to the list of players that requested to join,
---- and notify the squad leader about this.
+--- Add a player to the list of players that
+--- requested to join and notify the squad leader.
 function Squad:RequestToJoin( ply )
     if self.isPublic then
         self:AddMember( ply )
@@ -206,12 +208,16 @@ function Squad:RequestToJoin( ply )
     local id = ply:SteamID()
 
     if self.requests[id] then return end
-    self.requests[id] = true
+    self.requests[id] = ply:Nick()
 
-    local requestIds = table.GetKeys( self.requests )
+    local requests = {}
+
+    for rid, name in pairs( self.requests ) do
+        requests[#requests + 1] = { id = rid, name = name }
+    end
 
     SquadMenu.StartCommand( SquadMenu.REQUESTS_LIST )
-    SquadMenu.WriteTable( requestIds )
+    SquadMenu.WriteTable( requests )
     net.Send( self.leader )
 end
 
@@ -228,12 +234,12 @@ function Squad:AcceptRequests( ids )
             count = count + 1
 
             self.requests[id] = nil
-            self:AddMember( players[id], true )
+            self:AddMember( players[id], true ) -- add but don't sync yet
         end
     end
 
     if count > 0 then
-        self:SyncWithMembers()
+        self:SyncWithMembers() -- sync now
     end
 end
 
@@ -254,7 +260,7 @@ function Squad:Disband()
 
     if count > 0 then
         SquadMenu.StartCommand( SquadMenu.LEAVE_SQUAD )
-        net.WriteUInt( SquadMenu.LEAVE_REASON_DELETED, 2 )
+        net.WriteUInt( SquadMenu.LEAVE_REASON_DELETED, 3 )
         net.Send( recipients )
     end
 

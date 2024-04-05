@@ -76,7 +76,7 @@ commands[SquadMenu.ACCEPT_REQUESTS] = function( ply )
     local squad = SquadMenu:GetSquad( squadId )
     local steamIds = SquadMenu.ReadTable()
 
-    if squad then
+    if squad and squad.leader == ply then
         squad:AcceptRequests( steamIds )
     end
 end
@@ -89,6 +89,8 @@ commands[SquadMenu.KICK] = function( ply )
 
     if squad and squad.leader == ply then
         local targetId = net.ReadString()
+        if targetId == ply:SteamID() then return end
+
         local players = SquadMenu.AllPlayersBySteamID()
         if not players[targetId] then return end
 
@@ -103,7 +105,7 @@ local cooldowns = {
     [SquadMenu.JOIN_SQUAD] = { interval = 1, players = {} },
     [SquadMenu.LEAVE_SQUAD] = { interval = 1, players = {} },
     [SquadMenu.ACCEPT_REQUESTS] = { interval = 0.2, players = {} },
-    [SquadMenu.KICK] = { interval = 0.2, players = {} }
+    [SquadMenu.KICK] = { interval = 0.1, players = {} }
 }
 
 net.Receive( "squad_menu.command", function( _, ply )
@@ -177,7 +179,7 @@ hook.Add( "PlayerSay", "SquadMenu.RemovePrefix", function( sender, text )
 
     local data = {
         eventName = "members_chat",
-        senderId = sender:SteamID(),
+        senderName = sender:Nick(),
         text = text
     }
 

@@ -1,6 +1,6 @@
 SquadMenu = {
     -- Chat prefixes that allow messaging squad members only
-    CHAT_PREFIXES = { "/s", "!s", "/p", "/pc", "!pc", "/party", "!pchat" },
+    CHAT_PREFIXES = { "/s", "!s", "/p", "!pchat" },
 
     -- Primary color used for the UI theme
     THEME_COLOR = Color( 34, 52, 142 ),

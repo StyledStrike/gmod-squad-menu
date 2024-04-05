@@ -2,19 +2,19 @@ local L = SquadMenu.GetLanguageText
 local ApplyTheme = SquadMenu.Theme.Apply
 
 function SquadMenu:GetFrameChild( id )
-    if IsValid( self.squadMenuFrame ) then
-        return self.squadMenuFrame[id]
+    if IsValid( self.menuFrame ) then
+        return self.menuFrame[id]
     end
 end
 
 function SquadMenu:CloseSquadMenu()
-    if IsValid( self.squadMenuFrame ) then
-        self.squadMenuFrame:Close()
+    if IsValid( self.menuFrame ) then
+        self.menuFrame:Close()
     end
 end
 
 function SquadMenu:OpenSquadMenu()
-    if IsValid( self.squadMenuFrame ) then
+    if IsValid( self.menuFrame ) then
         self:CloseSquadMenu()
         return
     end
@@ -36,10 +36,10 @@ function SquadMenu:OpenSquadMenu()
     ApplyTheme( frame )
 
     frame.OnClose = function()
-        self.squadMenuFrame = nil
+        self.menuFrame = nil
     end
 
-    self.squadMenuFrame = frame
+    self.menuFrame = frame
 
     -- Squad state panel
     local statePanel = vgui.Create( "DPanel", frame )
@@ -146,7 +146,7 @@ function SquadMenu:UpdateSquadStatePanel()
     local function Leave()
         self:CloseSquadMenu()
 
-        SquadMenu.StartCommand( SquadMenu.LEAVE_SQUAD )
+        self.StartCommand( self.LEAVE_SQUAD )
         net.SendToServer()
     end
 
@@ -169,7 +169,7 @@ function SquadMenu:UpdateSquadStatePanel()
 end
 
 local function SetListStatus( text )
-    local parent = SquadMenu.squadMenuFrame.listPanel
+    local parent = SquadMenu.menuFrame.listPanel
 
     local labelStatus = vgui.Create( "DLabel", parent )
     labelStatus:SetText( L( text ) )
@@ -194,7 +194,7 @@ function SquadMenu:RequestSquadListUpdate()
 
     SetListStatus( "fetching_data" )
 
-    SquadMenu.StartCommand( SquadMenu.SQUAD_LIST )
+    self.StartCommand( self.SQUAD_LIST )
     net.SendToServer()
 end
 
@@ -204,13 +204,13 @@ function SquadMenu:UpdateSquadList( squads )
 
     listPanel:Clear()
 
-    if #squads == 0 then
-        SetListStatus( "no_available_squads" )
+    if LocalPlayer():GetSquadID() ~= -1 then
+        SetListStatus( "leave_first" )
         return
     end
 
-    if LocalPlayer():GetSquadID() ~= -1 then
-        SetListStatus( "leave_first" )
+    if #squads == 0 then
+        SetListStatus( "no_available_squads" )
         return
     end
 
@@ -239,12 +239,12 @@ function SquadMenu:UpdateSquadList( squads )
     local OnClickJoin = function( s )
         UpdateButton( s, "waiting_response", false )
 
-        SquadMenu.StartCommand( SquadMenu.JOIN_SQUAD )
+        self.StartCommand( self.JOIN_SQUAD )
         net.WriteUInt( s._id, 16 )
         net.SendToServer()
     end
 
-    local maxMembers = SquadMenu.GetMemberLimit()
+    local maxMembers = self.GetMemberLimit()
 
     for _, squad in ipairs( squads ) do
         local p = vgui.Create( "DPanel", listPanel )
@@ -294,9 +294,9 @@ function SquadMenu:UpdateSquadList( squads )
 end
 
 function SquadMenu:UpdateRequestsPanel()
-    if not IsValid( self.squadMenuFrame ) then return end
+    if not IsValid( self.menuFrame ) then return end
 
-    local requestsPanel = self.squadMenuFrame.requestsPanel
+    local requestsPanel = self.menuFrame.requestsPanel
 
     if requestsPanel then
         requestsPanel:Remove()
@@ -306,12 +306,12 @@ function SquadMenu:UpdateRequestsPanel()
     if not squad then return end
     if squad.leaderId ~= LocalPlayer():SteamID() then return end
 
-    requestsPanel = vgui.Create( "DPanel", self.squadMenuFrame )
+    requestsPanel = vgui.Create( "DPanel", self.menuFrame )
     requestsPanel:SetTall( 290 )
     requestsPanel:Dock( BOTTOM )
     requestsPanel:DockMargin( 0, 0, 0, 2 )
 
-    self.squadMenuFrame.requestsPanel = requestsPanel
+    self.menuFrame.requestsPanel = requestsPanel
 
     ApplyTheme( requestsPanel )
 
@@ -327,7 +327,7 @@ function SquadMenu:UpdateRequestsPanel()
 
     ApplyTheme( labelRequests )
 
-    local memberLimit = SquadMenu.GetMemberLimit() - squad.memberCount
+    local memberLimit = self.GetMemberLimit() - squad.memberCount
 
     if memberLimit < 1 then
         labelRequests:SetText( L"member_limit_reached" )
@@ -341,7 +341,7 @@ function SquadMenu:UpdateRequestsPanel()
     ApplyTheme( labelMemberCount )
 
     local function UpdateMemberCount( current )
-        labelMemberCount:SetText( L( "slots" ) .. ": " .. current .. "/" .. SquadMenu.GetMemberLimit() )
+        labelMemberCount:SetText( L( "slots" ) .. ": " .. current .. "/" .. self.GetMemberLimit() )
         labelMemberCount:SizeToContents()
     end
 
@@ -353,7 +353,7 @@ function SquadMenu:UpdateRequestsPanel()
         return
     end
 
-    if not self.joinRequests or #self.joinRequests == 0 then
+    if #squad.requests == 0 then
         labelRequests:SetText( L"no_requests_yet" )
         labelRequests:SizeToContents()
         return
@@ -368,11 +368,9 @@ function SquadMenu:UpdateRequestsPanel()
     local function OnClickAccept()
         local steamIds = table.GetKeys( acceptedPlayers )
 
-        SquadMenu.StartCommand( SquadMenu.ACCEPT_REQUESTS )
-        SquadMenu.WriteTable( steamIds )
+        self.StartCommand( self.ACCEPT_REQUESTS )
+        self.WriteTable( steamIds )
         net.SendToServer()
-
-        self:UpdateRequestsPanel()
     end
 
     local function UpdateAcceptedCount( count )
@@ -435,32 +433,34 @@ function SquadMenu:UpdateRequestsPanel()
 
     local players = SquadMenu.AllPlayersBySteamID()
 
-    for _, id in ipairs( self.joinRequests ) do
-        local ply = players[id]
+    for _, member in ipairs( squad.requests ) do
+        local line = vgui.Create( "DPanel", requestsScroll )
+        line:SetCursor( "hand" )
+        line:SetTall( 28 )
+        line:SetTall( 48 )
+        line:Dock( TOP )
+        line:DockMargin( 0, 0, 0, 2 )
 
-        if ply then
-            local line = vgui.Create( "DPanel", requestsScroll )
-            line:SetCursor( "hand" )
-            line:SetTall( 28 )
-            line:SetTall( 48 )
-            line:Dock( TOP )
-            line:DockMargin( 0, 0, 0, 2 )
+        line._id = member.id
+        line._name = member.name
+        line.Paint = PaintLine
+        line.OnMousePressed = ClickLine
 
-            line._id = id
-            line._name = ply:Nick()
-            line.Paint = PaintLine
-            line.OnMousePressed = ClickLine
+        local avatar = vgui.Create( "AvatarImage", line )
+        avatar:Dock( LEFT )
+        avatar:DockMargin( 12, 12, 12, 12 )
+        avatar:SetWide( 24 )
 
-            local avatar = vgui.Create( "AvatarImage", line )
-            avatar:Dock( LEFT )
-            avatar:DockMargin( 12, 12, 12, 12 )
-            avatar:SetWide( 24 )
-            avatar:SetPlayer( ply, 64 )
+        if players[member.id] then
+            avatar:SetPlayer( players[member.id], 64 )
         end
     end
 end
 
 function SquadMenu:OpenMembersEditor()
+    local squad = self.mySquad
+    if not squad then return end
+
     local frame = vgui.Create( "DFrame" )
     frame:SetTitle( L"kick" )
     frame:SetIcon( "icon128/squad_menu.png" )
@@ -481,7 +481,7 @@ function SquadMenu:OpenMembersEditor()
     membersScroll:Dock( FILL )
     membersScroll.pnlCanvas:DockPadding( 4, 4, 4, 4 )
 
-    if #self.otherMembers == 0 then
+    if #squad.members < 2 then
         local labelStatus = vgui.Create( "DLabel", membersScroll )
         labelStatus:SetText( L"no_members" )
         labelStatus:Dock( TOP )
@@ -502,15 +502,18 @@ function SquadMenu:OpenMembersEditor()
     end
 
     local ClickLine = function( s )
-        SquadMenu.StartCommand( SquadMenu.KICK )
+        self.StartCommand( self.KICK )
         net.WriteString( s._id )
         net.SendToServer()
 
         s:Remove()
     end
 
-    for _, ply in ipairs( self.otherMembers ) do
-        if IsValid( ply ) then
+    local players = SquadMenu.AllPlayersBySteamID()
+    local localSteamId = LocalPlayer():SteamID()
+
+    for _, member in ipairs( squad.members ) do
+        if member.id ~= localSteamId then
             local line = vgui.Create( "DPanel", membersScroll )
             line:SetCursor( "hand" )
             line:SetTall( 28 )
@@ -518,8 +521,8 @@ function SquadMenu:OpenMembersEditor()
             line:Dock( TOP )
             line:DockMargin( 0, 0, 0, 2 )
 
-            line._id = ply:SteamID()
-            line._name = ply:Nick()
+            line._id = member.id
+            line._name = member.name
             line.Paint = PaintLine
             line.OnMousePressed = ClickLine
 
@@ -527,7 +530,10 @@ function SquadMenu:OpenMembersEditor()
             avatar:Dock( LEFT )
             avatar:DockMargin( 12, 12, 12, 12 )
             avatar:SetWide( 24 )
-            avatar:SetPlayer( ply, 64 )
+
+            if players[member.id] then
+                avatar:SetPlayer( players[member.id], 64 )
+            end
         end
     end
 end
@@ -555,9 +561,10 @@ end
 function SquadMenu:OpenSquadEditor( squad )
     local isNew = squad == nil
 
-    squad = squad or { enableRings = true }
-
-    local oldColor = squad.color or Color( 0, 0, 255 )
+    squad = squad or {
+        enableRings = true,
+        color = Color( 0, 0, 255 )
+    }
 
     local data = {
         name = squad.name or string.format( L"default_squad_name", LocalPlayer():Nick() ),
@@ -567,9 +574,9 @@ function SquadMenu:OpenSquadEditor( squad )
         friendlyFire = squad.friendlyFire == true,
         isPublic = squad.isPublic == true,
 
-        r = oldColor.r or 0,
-        g = oldColor.g or 0,
-        b = oldColor.b or 255
+        r = squad.color.r,
+        g = squad.color.g,
+        b = squad.color.b
     }
 
     local frame = vgui.Create( "DFrame" )
@@ -597,8 +604,8 @@ function SquadMenu:OpenSquadEditor( squad )
     ApplyTheme( buttonCreate )
 
     buttonCreate.DoClick = function()
-        SquadMenu.StartCommand( SquadMenu.SETUP_SQUAD )
-        SquadMenu.WriteTable( data )
+        self.StartCommand( self.SETUP_SQUAD )
+        self.WriteTable( data )
         net.SendToServer()
 
         frame:Close()
@@ -628,7 +635,7 @@ function SquadMenu:OpenSquadEditor( squad )
     entryName:SetTall( 30 )
     entryName:Dock( TOP )
     entryName:DockMargin( 0, 0, 0, 4 )
-    entryName:SetMaximumCharCount( SquadMenu.MAX_NAME_LENGTH )
+    entryName:SetMaximumCharCount( self.MAX_NAME_LENGTH )
     entryName:SetValue( data.name )
 
     entryName.OnChange = function()
