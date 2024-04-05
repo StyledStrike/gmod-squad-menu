@@ -72,6 +72,7 @@ function Squad:GetBasicInfo()
     return {
         id = self.id,
         leaderId = self.leader:SteamID(),
+        leaderName = self.leader:Nick(),
         memberCount = #self.members,
 
         name = self.name,

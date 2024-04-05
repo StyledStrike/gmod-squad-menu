@@ -244,57 +244,52 @@ function SquadMenu:UpdateSquadList( squads )
         net.SendToServer()
     end
 
-    local players = SquadMenu.AllPlayersBySteamID()
     local maxMembers = SquadMenu.GetMemberLimit()
 
     for _, squad in ipairs( squads ) do
-        local ply = players[squad.leaderId]
+        local p = vgui.Create( "DPanel", listPanel )
+        p:SetTall( 48 )
+        p:Dock( TOP )
+        p:DockMargin( 0, 0, 0, 2 )
 
-        if IsValid( ply ) then
-            local p = vgui.Create( "DPanel", listPanel )
-            p:SetTall( 48 )
-            p:Dock( TOP )
-            p:DockMargin( 0, 0, 0, 2 )
+        p._id = squad.id
+        p._name = squad.name
+        p._leaderName = squad.leaderName
+        p._squadColor = Color( squad.r, squad.g, squad.b )
+        p.Paint = PaintLine
 
-            p._id = squad.id
-            p._name = squad.name
-            p._leaderName = ply:Nick()
-            p._squadColor = Color( squad.r, squad.g, squad.b )
-            p.Paint = PaintLine
+        local icon = vgui.Create( "DImage", p )
+        icon:Dock( LEFT )
+        icon:DockMargin( 12, 12, 12, 12 )
+        icon:SetWide( 24 )
+        icon:SetImage( squad.icon )
 
-            local icon = vgui.Create( "DImage", p )
-            icon:Dock( LEFT )
-            icon:DockMargin( 12, 12, 12, 12 )
-            icon:SetWide( 24 )
-            icon:SetImage( squad.icon )
+        local buttonJoin = vgui.Create( "DButton", p )
+        buttonJoin:Dock( RIGHT )
+        buttonJoin:DockMargin( 0, 4, 4, 4 )
 
-            local buttonJoin = vgui.Create( "DButton", p )
-            buttonJoin:Dock( RIGHT )
-            buttonJoin:DockMargin( 0, 4, 4, 4 )
+        ApplyTheme( buttonJoin )
 
-            ApplyTheme( buttonJoin )
+        if squad.memberCount < maxMembers then
+            buttonJoin._id = squad.id
+            buttonJoin.DoClick = OnClickJoin
 
-            if squad.memberCount < maxMembers then
-                buttonJoin._id = squad.id
-                buttonJoin.DoClick = OnClickJoin
-
-                UpdateButton( buttonJoin, squad.isPublic and "join" or "request_to_join", true )
-            else
-                UpdateButton( buttonJoin, "full_squad", false )
-            end
-
-            local labelCount = vgui.Create( "DLabel", p )
-            labelCount:SetText( squad.memberCount .. "/" .. maxMembers )
-            labelCount:SizeToContents()
-            labelCount:Dock( RIGHT )
-            labelCount:DockMargin( 0, 0, 10, 0 )
-
-            local iconCount = vgui.Create( "DImage", p )
-            iconCount:Dock( RIGHT )
-            iconCount:DockMargin( 16, 16, 4, 16 )
-            iconCount:SetWide( 16 )
-            iconCount:SetImage( "icon16/user.png" )
+            UpdateButton( buttonJoin, squad.isPublic and "join" or "request_to_join", true )
+        else
+            UpdateButton( buttonJoin, "full_squad", false )
         end
+
+        local labelCount = vgui.Create( "DLabel", p )
+        labelCount:SetText( squad.memberCount .. "/" .. maxMembers )
+        labelCount:SizeToContents()
+        labelCount:Dock( RIGHT )
+        labelCount:DockMargin( 0, 0, 10, 0 )
+
+        local iconCount = vgui.Create( "DImage", p )
+        iconCount:Dock( RIGHT )
+        iconCount:DockMargin( 16, 16, 4, 16 )
+        iconCount:SetWide( 16 )
+        iconCount:SetImage( "icon16/user.png" )
     end
 end
 
