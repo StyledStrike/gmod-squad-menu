@@ -17,17 +17,6 @@ if engine.ActiveGamemode() == "sandbox" then
     )
 end
 
-hook.Add( "OnPlayerChat", "SquadMenu.ChatCommand", function( ply, text )
-    if ply ~= LocalPlayer() then return end
-    if text[1] ~= "!" then return end
-
-    text = string.lower( string.Trim( text ) )
-
-    if text == "!squad" or text == "!party" then
-        SquadMenu:OpenSquadMenu()
-    end
-end )
-
 ----------
 
 local L = SquadMenu.GetLanguageText
@@ -157,7 +146,10 @@ commands[SquadMenu.BROADCAST_EVENT] = function()
 
     SquadMenu.PrintF( "Event received: %s", event )
 
-    if event == "player_joined_squad" then
+    if event == "open_menu" then
+        SquadMenu:OpenSquadMenu()
+
+    elseif event == "player_joined_squad" then
         local squad = SquadMenu.mySquad
         if not squad then return end
 

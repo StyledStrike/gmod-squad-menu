@@ -156,6 +156,20 @@ for _, prefix in ipairs( SquadMenu.CHAT_PREFIXES ) do
 end
 
 hook.Add( "PlayerSay", "SquadMenu.RemovePrefix", function( sender, text )
+    -- Check for commands to open the menu
+    if text[1] == "!" then
+        text = string.lower( string.Trim( text ) )
+
+        if text == "!squad" or text == "!party" then
+            SquadMenu.StartCommand( SquadMenu.BROADCAST_EVENT )
+            net.WriteString( SquadMenu.TableToJSON( { eventName = "open_menu" } ) )
+            net.Send( sender )
+
+            return ""
+        end
+    end
+
+    -- Check if this is supposed to be a members-only message
     local parts = string.Explode( " ", text, false )
     if not parts[1] or not prefixes[parts[1]] then return end
 
