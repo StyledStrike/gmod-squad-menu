@@ -90,8 +90,8 @@ Theme.classes["DButton"] = {
     Prepare = function( self )
         self._hoverAnim = 0
 
+        self:SetText( self:GetText():Trim() )
         self:SizeToContentsX( 10 )
-        self:SetContentAlignment( 5 )
     end,
 
     Paint = function( self, w, h )
