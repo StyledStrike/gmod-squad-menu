@@ -107,8 +107,6 @@ function SquadMenu:UpdateSquadStatePanel()
     if isLocalPlayerLeader then
         local buttonKick = vgui.Create( "DButton", statePanel )
         buttonKick:SetText( L"kick" )
-        buttonKick:SizeToContents()
-        buttonKick:SetWide( buttonKick:GetWide() + 8 )
         buttonKick:Dock( RIGHT )
         buttonKick:DockMargin( 4, 0, 0, 0 )
 
@@ -121,8 +119,6 @@ function SquadMenu:UpdateSquadStatePanel()
 
         local buttonEdit = vgui.Create( "DButton", statePanel )
         buttonEdit:SetText( L"edit_squad" )
-        buttonEdit:SizeToContents()
-        buttonEdit:SetWide( buttonEdit:GetWide() + 8 )
         buttonEdit:Dock( RIGHT )
         buttonEdit:DockMargin( 4, 0, 0, 0 )
 
@@ -136,8 +132,6 @@ function SquadMenu:UpdateSquadStatePanel()
 
     local buttonAction = vgui.Create( "DButton", statePanel )
     buttonAction:SetText( L( squad and "leave_squad" or "create_squad" ) )
-    buttonAction:SizeToContents()
-    buttonAction:SetWide( buttonAction:GetWide() + 8 )
     buttonAction:Dock( RIGHT )
     buttonAction:DockMargin( 4, 0, 0, 0 )
 
@@ -232,8 +226,7 @@ function SquadMenu:UpdateSquadList( squads )
     local UpdateButton = function( button, text, enabled )
         button:SetEnabled( enabled )
         button:SetText( L( text ) )
-        button:SizeToContents()
-        button:SetWide( button:GetWide() + 8 )
+        button:SizeToContentsX( 10 )
     end
 
     local OnClickJoin = function( s )
