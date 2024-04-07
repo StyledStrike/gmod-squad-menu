@@ -108,9 +108,9 @@ function SquadMenu:SetupSquad( data )
         sound.Play( "buttons/combine_button3.wav", Vector(), 0, 120, 0.75 )
     end
 
-    self:FullUpdateSquadMenu()
     self:UpdateMembersHUD()
     self:SetMembers( data.members, isUpdate )
+    self:FullUpdateSquadMenu()
 end
 
 function SquadMenu:OnLeaveSquad( reason )
