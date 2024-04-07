@@ -128,7 +128,9 @@ function SquadMenu:OnLeaveSquad( reason )
     self.mySquad = nil
 
     self:RemoveMembersHUD()
-    self:FullUpdateSquadMenu( true )
+
+    -- The event "squad_deleted" will update the squad list already
+    self:FullUpdateSquadMenu( reason == self.LEAVE_REASON_DELETED )
 end
 
 ----------
