@@ -563,6 +563,7 @@ end
 
 function SquadMenu:OpenSquadEditor( squad )
     local isNew = squad == nil
+    local oldName = squad and squad.name or nil
 
     squad = squad or {
         enableRings = true,
@@ -649,7 +650,8 @@ function SquadMenu:OpenSquadEditor( squad )
     entryName:SetValue( data.name )
 
     entryName.OnChange = function()
-        data.name = entryName:GetValue()
+        local value = entryName:GetValue()
+        data.name = value:Trim() == "" and oldName or value
     end
 
     ApplyTheme( entryName )
