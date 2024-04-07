@@ -229,6 +229,30 @@ function SquadMenu:UpdateSquadList( squads )
         surface.DrawRect( 0, 0, 4, h )
     end
 
+    local PaintMembers = function( s, w, h )
+        if not s:IsHovered() then return end
+
+        DisableClipping( true )
+        surface.SetFont( "DermaDefault" )
+
+        local x, y = s:CursorPos()
+        local _, lineH = surface.GetTextSize( "A" )
+
+        w, h = 180, 8 + lineH * #s._members
+        x = x - w
+
+        surface.SetDrawColor( 60, 60, 60, 255 )
+        surface.DrawRect( x, y, w, h )
+
+        x, y = x + w * 0.5, y + 4
+
+        for i, member in ipairs( s._members ) do
+            draw.SimpleText( member.name, "DermaDefault", x, y + lineH * ( i - 1 ), nameColor, 1, 3 )
+        end
+
+        DisableClipping( false )
+    end
+
     local UpdateButton = function( button, text, enabled )
         button:SetEnabled( enabled )
         button:SetText( L( text ) )
@@ -269,7 +293,9 @@ function SquadMenu:UpdateSquadList( squads )
 
         ApplyTheme( buttonJoin )
 
-        if #squad.members < maxMembers then
+        local memberCount = #squad.members
+
+        if memberCount < maxMembers then
             buttonJoin._id = squad.id
             buttonJoin.DoClick = OnClickJoin
 
@@ -278,17 +304,30 @@ function SquadMenu:UpdateSquadList( squads )
             UpdateButton( buttonJoin, "full_squad", false )
         end
 
-        local labelCount = vgui.Create( "DLabel", p )
-        labelCount:SetText( #squad.members .. "/" .. maxMembers )
-        labelCount:SizeToContents()
-        labelCount:Dock( RIGHT )
-        labelCount:DockMargin( 0, 0, 10, 0 )
+        local panelMembers = vgui.Create( "DPanel", p )
+        panelMembers:SetWide( 60 )
+        panelMembers:Dock( RIGHT )
+        panelMembers:DockMargin( 0, 4, 4, 4 )
 
-        local iconCount = vgui.Create( "DImage", p )
-        iconCount:Dock( RIGHT )
-        iconCount:DockMargin( 16, 16, 4, 16 )
+        for _, member in ipairs( squad.members ) do
+            member.name = SquadMenu.LimitText( member.name, 20 )
+        end
+
+        panelMembers._members = squad.members
+        panelMembers.PaintOver = PaintMembers
+
+        ApplyTheme( panelMembers )
+
+        local iconCount = vgui.Create( "DImage", panelMembers )
+        iconCount:Dock( LEFT )
+        iconCount:DockMargin( 4, 12, 4, 12 )
         iconCount:SetWide( 16 )
         iconCount:SetImage( "icon16/user.png" )
+
+        local labelCount = vgui.Create( "DLabel", panelMembers )
+        labelCount:SetText( memberCount .. "/" .. maxMembers )
+        labelCount:SizeToContents()
+        labelCount:Dock( FILL )
     end
 end
 

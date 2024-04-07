@@ -138,11 +138,19 @@ end
 
 if CLIENT then
     function SquadMenu.GetLanguageText( id )
-        return language.GetPhrase( "squad_menu." .. id )
+        return language.GetPhrase( "squad_menu." .. id ):Trim()
     end
 
     function SquadMenu.ChatPrint( ... )
         chat.AddText( SquadMenu.THEME_COLOR, "[" .. SquadMenu.GetLanguageText( "title" )  .. "] ", Color( 255, 255, 255 ), ... )
+    end
+
+    function SquadMenu.LimitText( str, maxLen )
+        if str:len() <= maxLen then
+            return str
+        end
+
+        return string.Left( str, maxLen - 3 ) .. "..."
     end
 
     -- Client files
