@@ -269,7 +269,7 @@ function SquadMenu:UpdateSquadList( squads )
 
         ApplyTheme( buttonJoin )
 
-        if squad.memberCount < maxMembers then
+        if #squad.members < maxMembers then
             buttonJoin._id = squad.id
             buttonJoin.DoClick = OnClickJoin
 
@@ -279,7 +279,7 @@ function SquadMenu:UpdateSquadList( squads )
         end
 
         local labelCount = vgui.Create( "DLabel", p )
-        labelCount:SetText( squad.memberCount .. "/" .. maxMembers )
+        labelCount:SetText( #squad.members .. "/" .. maxMembers )
         labelCount:SizeToContents()
         labelCount:Dock( RIGHT )
         labelCount:DockMargin( 0, 0, 10, 0 )
@@ -326,7 +326,7 @@ function SquadMenu:UpdateRequestsPanel()
 
     ApplyTheme( labelRequests )
 
-    local memberLimit = self.GetMemberLimit() - squad.memberCount
+    local memberLimit = self.GetMemberLimit() - #squad.members
 
     if memberLimit < 1 then
         labelRequests:SetText( L"member_limit_reached" )
@@ -344,7 +344,7 @@ function SquadMenu:UpdateRequestsPanel()
         labelMemberCount:SizeToContents()
     end
 
-    UpdateMemberCount( squad.memberCount )
+    UpdateMemberCount( #squad.members )
 
     if squad.isPublic then
         labelRequests:SetText( L"no_requests_needed" )
@@ -373,7 +373,7 @@ function SquadMenu:UpdateRequestsPanel()
     end
 
     local function UpdateAcceptedCount( count )
-        UpdateMemberCount( squad.memberCount + count )
+        UpdateMemberCount( #squad.members + count )
 
         if buttonAccept then
             buttonAccept:Remove()

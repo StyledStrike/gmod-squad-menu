@@ -71,9 +71,15 @@ end
 
 --- Get a table containing details of this squad.
 function Squad:GetBasicInfo()
+    local members = {}
+
+    for i, member in ipairs( self.members ) do
+        members[i] = { id = member:SteamID(), name = member:Nick() }
+    end
+
     return {
         id = self.id,
-        memberCount = #self.members,
+        members = members,
 
         leaderId = self.leader:SteamID(),
         leaderName = self.leader:Nick(),
@@ -133,17 +139,10 @@ end
 function Squad:SyncWithMembers()
     if #self.members == 0 then return end
 
-    local members = {}
-
-    for i, member in ipairs( self.members ) do
-        members[i] = { id = member:SteamID(), name = member:Nick() }
-    end
-
-    local squad = self:GetBasicInfo()
-    squad.members = members
+    local data = self:GetBasicInfo()
 
     SquadMenu.StartCommand( SquadMenu.SETUP_SQUAD )
-    SquadMenu.WriteTable( squad )
+    SquadMenu.WriteTable( data )
     net.Send( self.members )
 end
 

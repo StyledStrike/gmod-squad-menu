@@ -87,7 +87,6 @@ function SquadMenu:SetupSquad( data )
     squad.id = data.id
     squad.name = data.name
     squad.icon = data.icon
-    squad.memberCount = data.memberCount
 
     squad.leaderId = data.leaderId
     squad.leaderName = data.leaderName
