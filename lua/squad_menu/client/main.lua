@@ -98,15 +98,10 @@ function SquadMenu:SetupSquad( data )
 
     squad.color = Color( data.r, data.g, data.b )
 
-    if isUpdate then
-        self:UpdateSquadStatePanel()
-        self:UpdateRequestsPanel()
-    else
+    if not isUpdate then
         squad.requests = {}
         squad.members = {}
         squad.membersById = {}
-
-        self:CloseSquadMenu()
 
         self.ChatPrint( L"squad_welcome", squad.color, " " .. squad.name )
         self.ChatPrint( L"chat_tip", " " .. table.concat( self.CHAT_PREFIXES, ", " ) )
@@ -114,6 +109,7 @@ function SquadMenu:SetupSquad( data )
         sound.Play( "buttons/combine_button3.wav", Vector(), 0, 120, 0.75 )
     end
 
+    self:FullUpdateSquadMenu()
     self:UpdateMembersHUD()
     self:SetMembers( data.members, isUpdate )
 end
@@ -133,7 +129,7 @@ function SquadMenu:OnLeaveSquad( reason )
     self.mySquad = nil
 
     self:RemoveMembersHUD()
-    self:CloseSquadMenu()
+    self:FullUpdateSquadMenu( true )
 end
 
 ----------

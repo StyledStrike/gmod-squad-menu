@@ -232,6 +232,10 @@ Theme.classes["DFrame"] = {
         self:SetMouseInputEnabled( false )
         self:SetKeyboardInputEnabled( false )
 
+        if self.OnStartClosing then
+            self.OnStartClosing()
+        end
+
         local anim = self:NewAnimation( 0.2, 0, 0.5, function()
             self:_OriginalClose()
         end )

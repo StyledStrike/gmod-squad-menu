@@ -7,13 +7,24 @@ function SquadMenu:GetFrameChild( id )
     end
 end
 
+function SquadMenu:FullUpdateSquadMenu( dontRequestSquadList )
+    if IsValid( self.menuFrame ) then
+        self:UpdateSquadStatePanel()
+        self:UpdateRequestsPanel()
+
+        if dontRequestSquadList then return end
+
+        self:RequestSquadListUpdate()
+    end
+end
+
 function SquadMenu:CloseSquadMenu()
     if IsValid( self.menuFrame ) then
         self.menuFrame:Close()
     end
 end
 
-function SquadMenu:OpenSquadMenu()
+function SquadMenu:OpenSquadMenu( dontRequestSquadList )
     if IsValid( self.menuFrame ) then
         self:CloseSquadMenu()
         return
@@ -50,7 +61,6 @@ function SquadMenu:OpenSquadMenu()
     ApplyTheme( statePanel )
 
     frame.statePanel = statePanel
-    self:UpdateSquadStatePanel()
 
     -- Squad list panel
     local listPanel = vgui.Create( "DScrollPanel", frame )
@@ -61,10 +71,8 @@ function SquadMenu:OpenSquadMenu()
     ApplyTheme( listPanel )
 
     frame.listPanel = listPanel
-    self:RequestSquadListUpdate()
 
-    -- Squad join requests panel
-    self:UpdateRequestsPanel()
+    self:FullUpdateSquadMenu( dontRequestSquadList )
 end
 
 function SquadMenu:UpdateSquadStatePanel()
@@ -138,8 +146,6 @@ function SquadMenu:UpdateSquadStatePanel()
     ApplyTheme( buttonAction )
 
     local function Leave()
-        self:CloseSquadMenu()
-
         self.StartCommand( self.LEAVE_SQUAD )
         net.SendToServer()
     end
@@ -181,7 +187,7 @@ function SquadMenu:RequestSquadListUpdate()
 
     listPanel:Clear()
 
-    if LocalPlayer():GetSquadID() ~= -1 then
+    if self.mySquad then
         SetListStatus( "leave_first" )
         return
     end
@@ -198,7 +204,7 @@ function SquadMenu:UpdateSquadList( squads )
 
     listPanel:Clear()
 
-    if LocalPlayer():GetSquadID() ~= -1 then
+    if self.mySquad then
         SetListStatus( "leave_first" )
         return
     end
@@ -468,6 +474,10 @@ function SquadMenu:OpenMembersEditor()
     frame:Center()
     frame:MakePopup()
 
+    frame.OnStartClosing = function()
+        self:OpenSquadMenu()
+    end
+
     ApplyTheme( frame )
 
     local membersScroll = vgui.Create( "DScrollPanel", frame )
@@ -586,6 +596,10 @@ function SquadMenu:OpenSquadEditor( squad )
     frame:Center()
     frame:MakePopup()
 
+    frame.OnStartClosing = function()
+        self:OpenSquadMenu()
+    end
+
     ApplyTheme( frame )
 
     local buttonCreate = vgui.Create( "DButton", frame )
@@ -601,7 +615,10 @@ function SquadMenu:OpenSquadEditor( squad )
         self.WriteTable( data )
         net.SendToServer()
 
+        frame.OnStartClosing = nil
         frame:Close()
+
+        self:OpenSquadMenu( true )
     end
 
     local panelProperties = vgui.Create( "DScrollPanel", frame )
