@@ -260,6 +260,11 @@ commands[SquadMenu.BROADCAST_EVENT] = function()
     if event == "open_menu" then
         SquadMenu:OpenFrame()
 
+    elseif event == "squad_position_changed" then
+        if SquadMenu.membersPanel then
+            SquadMenu.membersPanel:InvalidateLayout()
+        end
+
     elseif event == "player_joined_squad" then
         local squad = SquadMenu.mySquad
         if not squad then return end

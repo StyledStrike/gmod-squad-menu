@@ -59,7 +59,36 @@ function SquadMenu:UpdateMembersHUD()
         s.childOffset = childOffset
 
         s:SetSize( w, h )
-        s:SetPos( screenW - w - ( screenH * 0.02 ), ( screenH * 0.5 ) - ( h * 0.5 ) )
+
+        local position = math.Clamp( SquadMenu.GetMembersPosition(), 1, 9 )
+        local offset = screenH * 0.02
+        local x, y
+
+        if position == 1 or position == 4 or position == 7 then
+            -- left
+            x = offset
+
+        elseif position == 2 or position == 5 or position == 8 then
+            -- center
+            x = ( screenW * 0.5 ) - ( w * 0.5 )
+        else
+            -- right
+            x = screenW - w - offset
+        end
+
+        if position == 7 or position == 8 or position == 9 then
+            -- top
+            y = offset
+
+        elseif position == 4 or position == 5 or position == 6 then
+            -- center
+            y = ( screenH * 0.5 ) - ( h * 0.5 )
+        else
+            -- bottom
+            y = screenH - h - offset
+        end
+
+        s:SetPos( x, y )
         s:_OriginalInvalidateLayout( layoutNow )
     end
 

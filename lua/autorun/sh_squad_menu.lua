@@ -49,6 +49,14 @@ CreateConVar(
     100, 10000
 )
 
+CreateConVar(
+    "squad_members_position",
+    "6",
+    FCVAR_ARCHIVE + FCVAR_REPLICATED + FCVAR_NOTIFY,
+    "Sets the position of the squad members on the screen. Takes numbers betweek 1-9 and uses the same positions as a numpad.",
+    1, 9
+)
+
 function SquadMenu.PrintF( str, ... )
     MsgC( SquadMenu.THEME_COLOR, "[Squad Menu] ", Color( 255, 255, 255 ), string.format( str, ... ), "\n" )
 end
@@ -75,6 +83,11 @@ function SquadMenu.GetNameRenderDistance()
     return cvarDistance and cvarDistance:GetInt() or 1000
 end
 
+function SquadMenu.GetMembersPosition()
+    local cvarPosition = GetConVar( "squad_members_position" )
+    return cvarPosition and cvarPosition:GetInt() or 6
+end
+
 function SquadMenu.AllPlayersBySteamID()
     local all = player.GetHumans()
     local byId = {}
@@ -89,14 +102,6 @@ end
 function SquadMenu.StartCommand( id )
     net.Start( "squad_menu.command", false )
     net.WriteUInt( id, SquadMenu.COMMAND_SIZE )
-end
-
-function SquadMenu.StartEvent( event, data )
-    data = data or {}
-    data.event = event
-
-    SquadMenu.StartCommand( SquadMenu.BROADCAST_EVENT )
-    net.WriteString( SquadMenu.TableToJSON( data ) )
 end
 
 function SquadMenu.WriteTable( t )
@@ -125,6 +130,14 @@ function SquadMenu.ReadTable()
 end
 
 if SERVER then
+    function SquadMenu.StartEvent( event, data )
+        data = data or {}
+        data.event = event
+
+        SquadMenu.StartCommand( SquadMenu.BROADCAST_EVENT )
+        net.WriteString( SquadMenu.TableToJSON( data ) )
+    end
+
     resource.AddWorkshop( "3207278246" )
     util.AddNetworkString( "squad_menu.command" )
 

@@ -198,3 +198,9 @@ hook.Add( "PlayerSay", "SquadMenu.RemovePrefix", function( sender, text )
 
     return ""
 end, HOOK_HIGH )
+
+-- Callbacks on FCVAR_REPLICATED cvars don't work clientside so we need this
+cvars.AddChangeCallback( "squad_members_position", function()
+    SquadMenu.StartEvent( "squad_position_changed" )
+    net.Broadcast()
+end, "changed_squad_members_position" )
