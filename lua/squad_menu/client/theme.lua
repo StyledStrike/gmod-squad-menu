@@ -1,6 +1,6 @@
 local colors = {
     black = Color( 0, 0, 0 ),
-    panelBackground = Color( 20, 20, 20, 240 ),
+    panelBackground = Color( 20, 20, 20, 230 ),
 
     frameBorder = Color( 80, 80, 80, 255 ),
     frameTitleBar = SquadMenu.THEME_COLOR,

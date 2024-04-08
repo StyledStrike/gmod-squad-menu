@@ -79,7 +79,7 @@ function PANEL:Init()
     self.tabList:SetWide( 48 )
     self.tabList:Dock( LEFT )
     self.tabList:DockPadding( 2, 2, 2, 2 )
-    self.tabList:SetBackgroundColor( Color( 0, 0, 0, 255 ) )
+    self.tabList:SetBackgroundColor( Color( 0, 0, 0, 200 ) )
 
     self.tabContainer = vgui.Create( "DPanel", self )
     self.tabContainer:Dock( FILL )

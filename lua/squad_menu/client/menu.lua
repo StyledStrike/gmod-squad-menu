@@ -231,11 +231,17 @@ function SquadMenu:UpdateRequestsPanel()
 
     UpdateMemberCount( #squad.members )
 
-    self.frame:SetTabNotificationCountByIndex( 4, #squad.requests )
+    if squad.isPublic then
+        SetListStatus( requestsPanel, "no_requests_needed" )
+        return
+    end
 
     if #squad.requests == 0 then
         SetListStatus( requestsPanel, "no_requests_yet" )
+        return
     end
+
+    self.frame:SetTabNotificationCountByIndex( 4, #squad.requests )
 
     local buttonAccept
     local acceptedPlayers = {}
@@ -371,7 +377,7 @@ function SquadMenu:UpdateSquadMembersPanel()
 
     local membersScroll = vgui.Create( "DScrollPanel", membersPanel )
     membersScroll:Dock( FILL )
-    membersScroll.pnlCanvas:DockPadding( 4, 4, 4, 4 )
+    membersScroll.pnlCanvas:DockPadding( 10, 0, 10, 4 )
 
     local OnClickKick = function( s )
         s:SetEnabled( false )

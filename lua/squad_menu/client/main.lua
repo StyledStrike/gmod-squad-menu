@@ -144,6 +144,11 @@ function SquadMenu:OnLeaveSquad( reason )
         self:UpdateSquadPropertiesPanel()
 
         self.frame:SetActiveTabByIndex( 1 ) -- squad list
+
+        -- prevent calling list update twice when the leader leaves
+        if reason ~= self.LEAVE_REASON_DELETED then
+            self:RequestSquadListUpdate()
+        end
     end
 end
 
