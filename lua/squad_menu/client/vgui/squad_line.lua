@@ -37,10 +37,10 @@ function PANEL:Init()
 
     self.memberCount = vgui.Create( "DPanel", self )
     self.memberCount:SetTall( 32 )
+    self.memberCount:SetPaintBackground( false )
     self.memberCount:DockPadding( 4, 0, 4, 0 )
 
     SquadMenu.Theme.Apply( self.buttonJoin )
-    SquadMenu.Theme.Apply( self.memberCount )
 end
 
 function PANEL:PerformLayout( w )
@@ -53,6 +53,10 @@ end
 
 function PANEL:Paint( w, h )
     draw.RoundedBox( 4, 0, 0, w, h, colors.black )
+
+    if self:IsHovered() then
+        draw.RoundedBox( 4, 0, 0, w, 48, colors.buttonBackground )
+    end
 
     surface.SetDrawColor( self.squad.color:Unpack() )
     surface.DrawRect( 0, 0, 4, h )
