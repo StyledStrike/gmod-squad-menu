@@ -542,10 +542,15 @@ function SquadMenu:UpdateSquadPropertiesPanel()
 
     local isNew = squad == nil
     local oldName = squad and squad.name or nil
+    local oldColor = squad and squad.color or nil
+
+    if not oldColor then
+        local c = HSVToColor( math.random( 0, 360 ), 1, 1 )
+        oldColor = Color( c.r, c.g, c.b ) -- reassign to avoid bug
+    end
 
     squad = squad or {
-        enableRings = true,
-        color = Color( 0, 0, 255 )
+        enableRings = true
     }
 
     local labelStatus = vgui.Create( "DLabel", panelHeader )
@@ -563,9 +568,9 @@ function SquadMenu:UpdateSquadPropertiesPanel()
         friendlyFire = squad.friendlyFire == true,
         isPublic = squad.isPublic == true,
 
-        r = squad.color.r,
-        g = squad.color.g,
-        b = squad.color.b
+        r = oldColor.r,
+        g = oldColor.g,
+        b = oldColor.b
     }
 
     local buttonCreate = vgui.Create( "DButton", propertiesPanel )
@@ -658,7 +663,7 @@ function SquadMenu:UpdateSquadPropertiesPanel()
     colorPicker:SetPalette( true )
     colorPicker:SetAlphaBar( false )
     colorPicker:SetWangs( true )
-    colorPicker:SetColor( Color( data.r, data.g, data.b ) )
+    colorPicker:SetColor( oldColor )
 
     colorPicker.ValueChanged = function( _, color )
         data.r = color.r
