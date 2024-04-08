@@ -175,7 +175,8 @@ do
     local ringOffset = Vector( 0, 0, 5 )
     local ringMat = Material( "squad_menu/ring.png" )
 
-    SquadMenu.DrawRing = function( ply )
+    SquadMenu.DrawRing = function( ply, flags )
+        if flags == 1 then return end
         if ply == LocalPlayer() then return end
         if not squad.membersById[ply:SteamID()] then return end
 
