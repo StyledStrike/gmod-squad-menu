@@ -160,6 +160,7 @@ SquadMenu.DrawHealthBar = DrawHealthBar
 
 ----------
 
+local EyePos = EyePos
 local Clamp = math.Clamp
 local SetMaterial = surface.SetMaterial
 local DrawTexturedRect = surface.DrawTexturedRect
@@ -197,20 +198,27 @@ end
 local AllPlayersBySteamID = SquadMenu.AllPlayersBySteamID
 
 SquadMenu.DrawHalos = function()
-    local players = AllPlayersBySteamID()
+    local origin = EyePos()
     local me = LocalPlayer()
-    local i, t = 0, {}
+    local players = AllPlayersBySteamID()
+    local i, t, dist = 0, {}
 
     for _, member in ipairs( squad.members ) do
         local ply = players[member.id]
 
         if ply and ply ~= me then
-            i = i + 1
-            t[i] = ply
+            dist = origin:DistToSqr( ply:EyePos() )
+
+            if dist < drawDistance then
+                i = i + 1
+                t[i] = ply
+            end
         end
     end
 
-    halo.Add( t, squad.color, 2, 2, 1, true, true )
+    if i > 0 then
+        halo.Add( t, squad.color, 2, 2, 1, true, true )
+    end
 end
 
 ----------
@@ -262,6 +270,7 @@ SquadMenu.DrawMemberTags = function()
     local origin = EyePos()
     local me = LocalPlayer()
     local players = AllPlayersBySteamID()
+    local dist
 
     for _, member in ipairs( squad.members ) do
         local ply = players[member.id]
