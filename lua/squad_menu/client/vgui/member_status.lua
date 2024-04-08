@@ -30,7 +30,7 @@ function PANEL:SetPlayer( id, name )
     self.playerId = id
     self.validateTimer = 0
 
-    self.name = SquadMenu.LimitText( name or "", 20 )
+    self.name = SquadMenu.ValidateString( name, "", 20 )
     self.health = 1
     self.armor = 0
     self.alive = true
@@ -57,7 +57,7 @@ function PANEL:Think()
 
     if ply then
         self.ply = ply
-        self.name = SquadMenu.LimitText( ply:Nick(), 20 )
+        self.name = SquadMenu.ValidateString( ply:Nick(), "-", 20 )
         self.avatar:SetPlayer( ply, 64 )
     end
 end

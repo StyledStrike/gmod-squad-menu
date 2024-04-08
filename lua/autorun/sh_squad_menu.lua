@@ -99,6 +99,28 @@ function SquadMenu.AllPlayersBySteamID()
     return byId
 end
 
+function SquadMenu.ValidateNumber( n, default, min, max )
+    return math.Clamp( tonumber( n ) or default, min, max )
+end
+
+function SquadMenu.ValidateString( s, default, maxLength )
+    if type( s ) ~= "string" then
+        return default
+    end
+
+    s = string.Trim( s )
+
+    if s == "" then
+        return default
+    end
+
+    if s:len() > maxLength then
+        return string.Left( s, maxLength - 3 ) .. "..."
+    end
+
+    return s
+end
+
 function SquadMenu.StartCommand( id )
     net.Start( "squad_menu.command", false )
     net.WriteUInt( id, SquadMenu.COMMAND_SIZE )
@@ -163,14 +185,6 @@ if CLIENT then
 
     function SquadMenu.ChatPrint( ... )
         chat.AddText( SquadMenu.THEME_COLOR, "[" .. SquadMenu.GetLanguageText( "title" )  .. "] ", Color( 255, 255, 255 ), ... )
-    end
-
-    function SquadMenu.LimitText( str, maxLen )
-        if str:len() <= maxLen then
-            return str
-        end
-
-        return string.Left( str, maxLen - 3 ) .. "..."
     end
 
     -- Client files

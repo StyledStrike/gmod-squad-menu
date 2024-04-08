@@ -95,27 +95,8 @@ function Squad:GetBasicInfo()
     }
 end
 
-local function ValidateString( s, default, maxLength )
-    if type( s ) ~= "string" then
-        return default
-    end
-
-    s = string.Trim( s )
-
-    if s == "" then
-        return default
-    end
-
-    if string.len( s ) > maxLength then
-        s = string.Left( s, maxLength )
-    end
-
-    return s
-end
-
-local function ValidateNumber( n, min, max )
-    return math.Clamp( tonumber( n ) or 0, min, max )
-end
+local ValidateString = SquadMenu.ValidateString
+local ValidateNumber = SquadMenu.ValidateNumber
 
 --- Set the details of this squad using a table.
 function Squad:SetBasicInfo( info )
@@ -126,9 +107,9 @@ function Squad:SetBasicInfo( info )
     self.friendlyFire = info.friendlyFire == true
     self.isPublic = info.isPublic == true
 
-    self.r = ValidateNumber( info.r, 0, 255 )
-    self.g = ValidateNumber( info.g, 0, 255 )
-    self.b = ValidateNumber( info.b, 0, 255 )
+    self.r = ValidateNumber( info.r, 255, 0, 255 )
+    self.g = ValidateNumber( info.g, 255, 0, 255 )
+    self.b = ValidateNumber( info.b, 255, 0, 255 )
 
     blockDamage[self.id] = Either( self.friendlyFire, nil, true )
 end
