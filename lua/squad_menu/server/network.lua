@@ -35,9 +35,8 @@ commands[SquadMenu.SETUP_SQUAD] = function( ply )
 
         SquadMenu.PrintF( "Edited squad #%d for %s", squadId, ply:SteamID() )
 
-        SquadMenu.BroadcastEvent( "squad_created", {
-            id = squadId
-        } )
+        SquadMenu.StartEvent( "squad_created", { id = squadId } )
+        net.Broadcast()
 
         return
     end
@@ -102,7 +101,7 @@ end
 local cooldowns = {
     [SquadMenu.SQUAD_LIST] = { interval = 0.5, players = {} },
     [SquadMenu.SETUP_SQUAD] = { interval = 1, players = {} },
-    [SquadMenu.JOIN_SQUAD] = { interval = 1, players = {} },
+    [SquadMenu.JOIN_SQUAD] = { interval = 0.1, players = {} },
     [SquadMenu.LEAVE_SQUAD] = { interval = 1, players = {} },
     [SquadMenu.ACCEPT_REQUESTS] = { interval = 0.2, players = {} },
     [SquadMenu.KICK] = { interval = 0.1, players = {} }
@@ -161,8 +160,7 @@ hook.Add( "PlayerSay", "SquadMenu.RemovePrefix", function( sender, text )
         text = string.lower( string.Trim( text ) )
 
         if text == "!squad" or text == "!party" then
-            SquadMenu.StartCommand( SquadMenu.BROADCAST_EVENT )
-            net.WriteString( SquadMenu.TableToJSON( { eventName = "open_menu" } ) )
+            SquadMenu.StartEvent( "open_menu" )
             net.Send( sender )
 
             return ""
@@ -191,14 +189,11 @@ hook.Add( "PlayerSay", "SquadMenu.RemovePrefix", function( sender, text )
 
     local members = SquadMenu:GetSquad( id ).members
 
-    local data = {
-        eventName = "members_chat",
+    SquadMenu.StartEvent( "members_chat", {
         senderName = sender:Nick(),
         text = text
-    }
+    } )
 
-    SquadMenu.StartCommand( SquadMenu.BROADCAST_EVENT )
-    net.WriteString( SquadMenu.TableToJSON( data ) )
     net.Send( members )
 
     return ""

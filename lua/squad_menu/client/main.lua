@@ -1,6 +1,6 @@
 concommand.Add(
     "squad_menu",
-    function() SquadMenu:OpenSquadMenu() end,
+    function() SquadMenu:OpenFrame() end,
     nil,
     "Opens the squad menu."
 )
@@ -12,7 +12,7 @@ if engine.ActiveGamemode() == "sandbox" then
         {
             title = SquadMenu.GetLanguageText( "title" ),
             icon = "materials/icon128/squad_menu.png",
-            init = function() SquadMenu:OpenSquadMenu() end
+            init = function() SquadMenu:OpenFrame() end
         }
     )
 end
@@ -110,7 +110,12 @@ function SquadMenu:SetupSquad( data )
 
     self:UpdateMembersHUD()
     self:SetMembers( data.members, isUpdate )
-    self:FullUpdateSquadMenu()
+
+    self:UpdateSquadList()
+    self:UpdateSquadStatePanel()
+    self:UpdateRequestsPanel()
+    self:UpdateSquadMembersPanel()
+    self:UpdateSquadPropertiesPanel()
 end
 
 function SquadMenu:OnLeaveSquad( reason )
@@ -126,56 +131,17 @@ function SquadMenu:OnLeaveSquad( reason )
     end
 
     self.mySquad = nil
-
     self:RemoveMembersHUD()
 
-    -- The event "squad_deleted" will update the squad list already
-    self:FullUpdateSquadMenu( reason == self.LEAVE_REASON_DELETED )
+    self:UpdateSquadStatePanel()
+    self:UpdateRequestsPanel()
+    self:UpdateSquadMembersPanel()
+    self:UpdateSquadPropertiesPanel()
 end
 
 ----------
 
 local commands = {}
-
-commands[SquadMenu.BROADCAST_EVENT] = function()
-    local data = SquadMenu.JSONToTable( net.ReadString() )
-    local event = data.eventName
-
-    SquadMenu.PrintF( "Event received: %s", event )
-
-    if event == "open_menu" then
-        SquadMenu:OpenSquadMenu()
-
-    elseif event == "player_joined_squad" then
-        local squad = SquadMenu.mySquad
-        if not squad then return end
-
-        -- Remove this player from my requests list
-        local requests = squad.requests
-
-        for i, member in ipairs( requests ) do
-            if data.playerId == member.id then
-                table.remove( requests, i )
-                break
-            end
-        end
-
-        SquadMenu:UpdateRequestsPanel()
-
-    elseif event == "squad_created" or event == "squad_deleted" then
-        -- Update the squad list (if it's open)
-        SquadMenu:RequestSquadListUpdate()
-
-    elseif event == "members_chat" then
-        local squad = SquadMenu.mySquad
-        if not squad then return end
-
-        local white = Color( 255, 255, 255 )
-
-        chat.AddText( white, "[", squad.color, squad.name, white, "] ",
-            squad.color, data.senderName, white, ": ", data.text )
-    end
-end
 
 commands[SquadMenu.SQUAD_LIST] = function()
     SquadMenu:UpdateSquadList( SquadMenu.ReadTable() )
@@ -223,6 +189,45 @@ commands[SquadMenu.REQUESTS_LIST] = function()
     end
 
     SquadMenu:UpdateRequestsPanel()
+end
+
+commands[SquadMenu.BROADCAST_EVENT] = function()
+    local data = SquadMenu.JSONToTable( net.ReadString() )
+    local event = data.event
+
+    SquadMenu.PrintF( "Event received: %s", event )
+
+    if event == "open_menu" then
+        SquadMenu:OpenFrame()
+
+    elseif event == "player_joined_squad" then
+        local squad = SquadMenu.mySquad
+        if not squad then return end
+
+        -- Remove this player from my requests list
+        local requests = squad.requests
+
+        for i, member in ipairs( requests ) do
+            if data.playerId == member.id then
+                table.remove( requests, i )
+                break
+            end
+        end
+
+        SquadMenu:UpdateRequestsPanel()
+
+    elseif event == "squad_created" or event == "squad_deleted" then
+        SquadMenu:RequestSquadListUpdate()
+
+    elseif event == "members_chat" then
+        local squad = SquadMenu.mySquad
+        if not squad then return end
+
+        local white = Color( 255, 255, 255 )
+
+        chat.AddText( white, "[", squad.color, squad.name, white, "] ",
+            squad.color, data.senderName, white, ": ", data.text )
+    end
 end
 
 net.Receive( "squad_menu.command", function()

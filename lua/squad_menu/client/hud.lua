@@ -1,12 +1,5 @@
 local squad, nameDistance
 
-local COLORS = {
-    WHITE = Color( 255, 255, 255, 255 ),
-    HEALTH = Color( 94, 253, 255, 255 ),
-    LOW_HEALTH = Color( 250, 20, 20, 255 ),
-    BOX_BG = Color( 0, 0, 0, 200 )
-}
-
 function SquadMenu:RemoveMembersHUD()
     if self.membersPanel then
         self.membersPanel:Remove()
@@ -81,6 +74,7 @@ end
 function SquadMenu:AddMemberToHUD( member )
     member.panel = vgui.Create( "Squad_MemberInfo", self.membersPanel )
     member.panel:SetPlayer( member.id, member.name )
+    member.panel.squad = squad
 
     self.membersPanel:InvalidateLayout()
 end
@@ -94,11 +88,18 @@ end
 
 ----------
 
+local COLORS = {
+    WHITE = Color( 255, 255, 255, 255 ),
+    HEALTH = Color( 94, 253, 255, 255 ),
+    LOW_HEALTH = Color( 250, 20, 20, 255 ),
+    BOX_BG = Color( 0, 0, 0, 200 )
+}
+
 local SetColor = surface.SetDrawColor
 local DrawRect = surface.DrawRect
 local DrawOutlinedRect = surface.DrawOutlinedRect
 
-local function DrawBar( x, y, w, h, health, armor )
+local DrawHealthBar = function( x, y, w, h, health, armor )
     if armor > 0 then
         SetColor( 255, 255, 255, 255 )
         DrawOutlinedRect( x - 1, y - 1, ( w + 2 ) * armor, h + 2, 1 )
@@ -116,99 +117,13 @@ local function DrawBar( x, y, w, h, health, armor )
     DrawRect( x, y, w * health, h )
 end
 
+SquadMenu.DrawHealthBar = DrawHealthBar
+
 ----------
 
-local IsValid = IsValid
 local Clamp = math.Clamp
-local RealTime = RealTime
-local FrameTime = FrameTime
-local Approach = math.Approach
-
 local SetMaterial = surface.SetMaterial
-local DrawSimpleText = draw.SimpleText
 local DrawTexturedRect = surface.DrawTexturedRect
-
-local matGradient = Material( "vgui/gradient-r" )
-
-local PANEL = {}
-
-function PANEL:Init()
-    self.avatar = vgui.Create( "AvatarImage", self )
-    self:InvalidateLayout()
-    self:SetPlayer()
-end
-
-function PANEL:SetPlayer( id, name )
-    self.playerId = id
-    self.validateTimer = 0
-
-    self.name = SquadMenu.LimitText( name or "", 20 )
-    self.health = 1
-    self.armor = 0
-    self.alive = true
-
-    self.healthAnim = 0
-    self.armorAnim = 0
-end
-
-function PANEL:Think()
-    if IsValid( self.ply ) then
-        self.health = Clamp( self.ply:Health() / 100, 0, 1 )
-        self.armor = Clamp( self.ply:Armor() / 100, 0, 1 )
-        self.alive = self.ply:Alive()
-
-        return
-    end
-
-    -- Keep trying to get the player entity periodically
-    if RealTime() < self.validateTimer then return end
-
-    self.validateTimer = RealTime() + 1
-
-    local ply = player.GetBySteamID( self.playerId )
-
-    if ply then
-        self.ply = ply
-        self.name = SquadMenu.LimitText( ply:Nick(), 20 )
-        self.avatar:SetPlayer( ply, 64 )
-    end
-end
-
-function PANEL:Paint( w, h )
-    local split = h
-
-    SetColor( squad.color:Unpack() )
-    DrawRect( w - split, 0, split, h )
-
-    SetColor( 0, 0, 0, 240 )
-    SetMaterial( matGradient )
-    DrawTexturedRect( 0, 0, w - split, h )
-
-    local dt = FrameTime()
-
-    self.healthAnim = Approach( self.healthAnim, self.health, dt * 2 )
-    self.armorAnim = Approach( self.armorAnim, self.armor, dt )
-
-    if self.alive then
-        local barH = h * 0.2
-        DrawBar( 2, h - barH - 6, w - split - 6, barH, self.healthAnim, self.armorAnim )
-    end
-
-    DrawSimpleText( self.name, "TargetIDSmall", 2, 2 + h * 0.5,
-        self.alive and COLORS.WHITE or COLORS.LOW_HEALTH, 0, self.alive and 4 or 1, 1 )
-end
-
-function PANEL:PerformLayout( w, h )
-    local size = h - 4
-
-    self.avatar:SetSize( size, size )
-    self.avatar:SetPos( w - size - 2, 2 )
-end
-
-vgui.Register( "Squad_MemberInfo", PANEL, "DPanel" )
-
-----------
-
 local LocalPlayer = LocalPlayer
 
 do
@@ -254,6 +169,7 @@ end
 
 ----------
 
+local DrawSimpleText = draw.SimpleText
 local GetTextSize = surface.GetTextSize
 local SetAlphaMultiplier = surface.SetAlphaMultiplier
 
@@ -274,7 +190,7 @@ local function DrawTag( ply )
     DrawSimpleText( text, "TargetIDSmall", pos.x, y, COLORS.WHITE, 1, 0 )
 
     if isAlive then
-        DrawBar( x - 2, y + 16, boxW + 4, 4, Clamp( ply:Health() / 100, 0, 1 ), ply:Armor() / 100 )
+        DrawHealthBar( x - 2, y + 16, boxW + 4, 4, Clamp( ply:Health() / 100, 0, 1 ), ply:Armor() / 100 )
     else
         DrawSimpleText( "*", "TargetIDSmall", pos.x, y + 14, COLORS.LOW_HEALTH, 1, 0 )
     end

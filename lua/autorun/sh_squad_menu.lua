@@ -88,12 +88,12 @@ function SquadMenu.StartCommand( id )
     net.WriteUInt( id, SquadMenu.COMMAND_SIZE )
 end
 
-function SquadMenu.BroadcastEvent( name, data )
-    data.eventName = name
+function SquadMenu.StartEvent( event, data )
+    data = data or {}
+    data.event = event
 
     SquadMenu.StartCommand( SquadMenu.BROADCAST_EVENT )
     net.WriteString( SquadMenu.TableToJSON( data ) )
-    net.Broadcast()
 end
 
 function SquadMenu.WriteTable( t )
@@ -134,6 +134,10 @@ if SERVER then
     AddCSLuaFile( "squad_menu/client/main.lua" )
     AddCSLuaFile( "squad_menu/client/menu.lua" )
     AddCSLuaFile( "squad_menu/client/hud.lua" )
+
+    AddCSLuaFile( "squad_menu/client/vgui/member_status.lua" )
+    AddCSLuaFile( "squad_menu/client/vgui/squad_line.lua" )
+    AddCSLuaFile( "squad_menu/client/vgui/tabbed_frame.lua" )
 end
 
 if CLIENT then
@@ -158,6 +162,10 @@ if CLIENT then
     include( "squad_menu/client/main.lua" )
     include( "squad_menu/client/menu.lua" )
     include( "squad_menu/client/hud.lua" )
+
+    include( "squad_menu/client/vgui/member_status.lua" )
+    include( "squad_menu/client/vgui/squad_line.lua" )
+    include( "squad_menu/client/vgui/tabbed_frame.lua" )
 end
 
 local PlayerMeta = FindMetaTable( "Player" )

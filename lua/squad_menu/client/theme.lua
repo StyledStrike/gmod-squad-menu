@@ -1,5 +1,6 @@
 local colors = {
-    panelBackground = Color( 30, 30, 30, 240 ),
+    black = Color( 0, 0, 0 ),
+    panelBackground = Color( 20, 20, 20, 240 ),
 
     frameBorder = Color( 80, 80, 80, 255 ),
     frameTitleBar = SquadMenu.THEME_COLOR,
@@ -26,10 +27,11 @@ local Theme = SquadMenu.Theme or {
     classes = {}
 }
 
+Theme.colors = colors
 SquadMenu.Theme = Theme
 
-function Theme.Apply( panel )
-    local class = Theme.classes[panel.ClassName]
+function Theme.Apply( panel, forceClass )
+    local class = Theme.classes[forceClass or panel.ClassName]
     if not class then return end
 
     if class.Prepare then
@@ -258,7 +260,7 @@ Theme.classes["DFrame"] = {
         surface.DrawOutlinedRect( 0, 0, w, h, 1 )
 
         SetDrawColor( colors.panelBackground:Unpack() )
-        DrawRect( 1, 1, w - 2, h - 2 )
+        DrawRect( 0, 0, w, h )
 
         SetDrawColor( colors.frameTitleBar:Unpack() )
         DrawRect( 0, 0, w, 24 )

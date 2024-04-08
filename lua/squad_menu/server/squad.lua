@@ -26,9 +26,8 @@ function SquadMenu:DeleteSquad( id )
 
         self.PrintF( "Deleted squad #%d", id )
 
-        self.BroadcastEvent( "squad_deleted", {
-            id = id
-        } )
+        self.StartEvent( "squad_deleted", { id = id } )
+        net.Broadcast()
     end
 end
 
@@ -62,9 +61,8 @@ function SquadMenu:CreateSquad( leader )
 
     self.PrintF( "Created squad #%d for %s", id, leader:SteamID() )
 
-    self.BroadcastEvent( "squad_created", {
-        id = id
-    } )
+    self.StartEvent( "squad_created", { id = id } )
+    net.Broadcast()
 
     return self.squads[id]
 end
@@ -168,10 +166,11 @@ function Squad:AddMember( ply, dontSync )
         squad.requests[id] = nil
     end
 
-    SquadMenu.BroadcastEvent( "player_joined_squad", {
+    SquadMenu.StartEvent( "player_joined_squad", {
         squadId = self.id,
         playerId = id
     } )
+    net.Broadcast()
 end
 
 --- Remove a player from this squad's members list.

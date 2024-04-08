@@ -1,96 +1,85 @@
 local L = SquadMenu.GetLanguageText
 local ApplyTheme = SquadMenu.Theme.Apply
 
-function SquadMenu:GetFrameChild( id )
-    if IsValid( self.menuFrame ) then
-        return self.menuFrame[id]
+local function SetListStatus( parent, text )
+    local panel = vgui.Create( "DPanel", parent )
+    panel:Dock( FILL )
+
+    ApplyTheme( panel )
+
+    local labelStatus = vgui.Create( "DLabel", panel )
+    labelStatus:SetText( L( text ) )
+    labelStatus:SetContentAlignment( 5 )
+    labelStatus:SizeToContents()
+    labelStatus:Dock( FILL )
+
+    ApplyTheme( labelStatus )
+end
+
+function SquadMenu:CloseFrame()
+    if IsValid( self.frame ) then
+        self.frame:Close()
     end
 end
 
-function SquadMenu:FullUpdateSquadMenu( dontRequestSquadList )
-    if IsValid( self.menuFrame ) then
-        self:UpdateSquadStatePanel()
-        self:UpdateRequestsPanel()
-
-        if dontRequestSquadList then return end
-
-        self:RequestSquadListUpdate()
-    end
-end
-
-function SquadMenu:CloseSquadMenu()
-    if IsValid( self.menuFrame ) then
-        self.menuFrame:Close()
-    end
-end
-
-function SquadMenu:OpenSquadMenu( dontRequestSquadList )
-    if IsValid( self.menuFrame ) then
-        self:CloseSquadMenu()
+function SquadMenu:OpenFrame()
+    if IsValid( self.frame ) then
+        self:CloseFrame()
         return
     end
 
-    local frame = vgui.Create( "DFrame" )
-    frame:SetTitle( L"title" )
-    frame:SetIcon( "icon128/squad_menu.png" )
-    frame:SetPos( 0, 0 )
-    frame:SetSize( 600, 400 )
-    frame:SetSizable( true )
-    frame:SetDraggable( true )
-    frame:SetDeleteOnClose( true )
-    frame:SetScreenLock( true )
-    frame:SetMinWidth( 600 )
-    frame:SetMinHeight( 400 )
+    local frame = vgui.Create( "Squad_TabbedFrame" )
     frame:Center()
     frame:MakePopup()
 
-    ApplyTheme( frame )
-
     frame.OnClose = function()
-        self.menuFrame = nil
+        self.frame = nil
     end
 
-    self.menuFrame = frame
+    self.frame = frame
 
-    -- Squad state panel
-    local statePanel = vgui.Create( "DPanel", frame )
-    statePanel:SetTall( 36 )
-    statePanel:Dock( BOTTOM )
-    statePanel:DockPadding( 4, 4, 4, 4 )
+    local panels = {}
+    frame._panels = panels
 
-    ApplyTheme( statePanel )
+    -- Squad state
+    panels.squadState = vgui.Create( "DPanel", frame )
+    panels.squadState:SetTall( 32 )
+    panels.squadState:Dock( BOTTOM )
+    panels.squadState:DockMargin( 4, 4, 0, 0 )
+    panels.squadState:DockPadding( 4, 4, 4, 4 )
 
-    frame.statePanel = statePanel
+    ApplyTheme( panels.squadState )
 
-    -- Squad list panel
-    local listPanel = vgui.Create( "DScrollPanel", frame )
-    listPanel:Dock( FILL )
-    listPanel:DockMargin( 0, 0, 0, 2 )
-    listPanel.pnlCanvas:DockPadding( 4, 4, 4, 4 )
+    -- Tabs
+    panels.squadList = frame:AddTab( "icon16/text_list_bullets.png", L"tab.squad_list" )
+    panels.squadProperties = frame:AddTab( "icon16/flag_blue.png", L"tab.squad_properties" )
+    panels.squadMembers = frame:AddTab( "icon16/group.png", L"tab.squad_members" )
+    panels.joinRequests = frame:AddTab( "icon16/user_add.png", L"tab.join_requests" )
+    panels.settings = frame:AddTab( "icon16/cog.png", L"tab.settings" )
 
-    ApplyTheme( listPanel )
+    self:RequestSquadListUpdate()
+    self:UpdateSquadStatePanel()
+    self:UpdateRequestsPanel()
+    self:UpdateSquadMembersPanel()
+    self:UpdateSquadPropertiesPanel()
+end
 
-    frame.listPanel = listPanel
-
-    self:FullUpdateSquadMenu( dontRequestSquadList )
+function SquadMenu:GetPanel( id )
+    if IsValid( self.frame ) then
+        return self.frame._panels[id]
+    end
 end
 
 function SquadMenu:UpdateSquadStatePanel()
-    local statePanel = self:GetFrameChild( "statePanel" )
+    local statePanel = self:GetPanel( "squadState" )
     if not statePanel then return end
 
     statePanel:Clear()
 
     local squad = self.mySquad
-
-    local panelBanner = vgui.Create( "DPanel", statePanel )
-    panelBanner:SetTall( 40 )
-    panelBanner:Dock( FILL )
-    panelBanner:DockPadding( 4, 4, 4, 4 )
-
     local squadColor = squad and squad.color or Color( 0, 0, 0 )
 
-    panelBanner.Paint = function( _, w, h )
+    statePanel.Paint = function( _, w, h )
         surface.SetDrawColor( 20, 20, 20 )
         surface.DrawRect( 0, 0, w, h )
 
@@ -98,67 +87,39 @@ function SquadMenu:UpdateSquadStatePanel()
         surface.DrawOutlinedRect( 0, 0, w, h, 1 )
     end
 
-    local imageIcon = vgui.Create( "DImage", panelBanner )
+    local imageIcon = vgui.Create( "DImage", statePanel )
     imageIcon:Dock( LEFT )
-    imageIcon:SetWide( 22 )
+    imageIcon:SetWide( 24 )
     imageIcon:SetImage( squad and squad.icon or "vgui/avatar_default" )
 
-    local labelName = vgui.Create( "DLabel", panelBanner )
+    local labelName = vgui.Create( "DLabel", statePanel )
     labelName:Dock( FILL )
     labelName:DockMargin( 8, 0, 0, 0 )
     labelName:SetText( squad and squad.name or L"not_in_a_squad" )
 
     ApplyTheme( labelName )
 
-    local isLocalPlayerLeader = squad and squad.leaderId == LocalPlayer():SteamID()
+    if not squad then return end
 
-    if isLocalPlayerLeader then
-        local buttonKick = vgui.Create( "DButton", statePanel )
-        buttonKick:SetText( L"kick" )
-        buttonKick:Dock( RIGHT )
-        buttonKick:DockMargin( 4, 0, 0, 0 )
+    local buttonLeave = vgui.Create( "DButton", statePanel )
+    buttonLeave:SetText( L"leave_squad" )
+    buttonLeave:Dock( RIGHT )
+    buttonLeave:DockMargin( 4, 0, 0, 0 )
 
-        ApplyTheme( buttonKick )
+    ApplyTheme( buttonLeave )
 
-        buttonKick.DoClick = function()
-            self:CloseSquadMenu()
-            self:OpenMembersEditor()
-        end
+    local Leave = function()
+        buttonLeave:SetEnabled( false )
+        buttonLeave:SetText( "..." )
 
-        local buttonEdit = vgui.Create( "DButton", statePanel )
-        buttonEdit:SetText( L"edit_squad" )
-        buttonEdit:Dock( RIGHT )
-        buttonEdit:DockMargin( 4, 0, 0, 0 )
-
-        ApplyTheme( buttonEdit )
-
-        buttonEdit.DoClick = function()
-            self:CloseSquadMenu()
-            self:OpenSquadEditor( self.mySquad )
-        end
-    end
-
-    local buttonAction = vgui.Create( "DButton", statePanel )
-    buttonAction:SetText( L( squad and "leave_squad" or "create_squad" ) )
-    buttonAction:Dock( RIGHT )
-    buttonAction:DockMargin( 4, 0, 0, 0 )
-
-    ApplyTheme( buttonAction )
-
-    local function Leave()
         self.StartCommand( self.LEAVE_SQUAD )
         net.SendToServer()
     end
 
-    buttonAction.DoClick = function()
-        if not squad then
-            self:CloseSquadMenu()
-            self:OpenSquadEditor()
+    LocalPlayer():SteamID()
 
-            return
-        end
-
-        if isLocalPlayerLeader then
+    buttonLeave.DoClick = function()
+        if squad.leaderId == LocalPlayer():SteamID() then
             Derma_Query( L"leave_leader", L"leave_squad", L"yes", function()
                 Leave()
             end, L"no" )
@@ -168,194 +129,79 @@ function SquadMenu:UpdateSquadStatePanel()
     end
 end
 
-local function SetListStatus( text )
-    local parent = SquadMenu.menuFrame.listPanel
-
-    local labelStatus = vgui.Create( "DLabel", parent )
-    labelStatus:SetText( L( text ) )
-    labelStatus:SetContentAlignment( 5 )
-    labelStatus:SizeToContents()
-    labelStatus:Dock( TOP )
-    labelStatus:DockMargin( 0, 8, 0, 0 )
-
-    ApplyTheme( labelStatus )
-end
-
 function SquadMenu:RequestSquadListUpdate()
-    local listPanel = self:GetFrameChild( "listPanel" )
+    local listPanel = self:GetPanel( "squadList" )
     if not listPanel then return end
 
     listPanel:Clear()
 
     if self.mySquad then
-        SetListStatus( "leave_first" )
+        SetListStatus( listPanel, "leave_first" )
         return
     end
 
-    SetListStatus( "fetching_data" )
+    SetListStatus( listPanel, "fetching_data" )
 
     self.StartCommand( self.SQUAD_LIST )
     net.SendToServer()
 end
 
 function SquadMenu:UpdateSquadList( squads )
-    local listPanel = self:GetFrameChild( "listPanel" )
+    local listPanel = self:GetPanel( "squadList" )
     if not listPanel then return end
 
     listPanel:Clear()
 
     if self.mySquad then
-        SetListStatus( "leave_first" )
+        SetListStatus( listPanel, "leave_first" )
         return
     end
 
     if #squads == 0 then
-        SetListStatus( "no_available_squads" )
+        SetListStatus( listPanel, "no_available_squads" )
         return
     end
 
-    local bgColor = Color( 0, 0, 0 )
-    local nameColor = Color( 255, 255, 255 )
-    local playerColor = Color( 160, 160, 160 )
-
-    local PaintLine = function( s, w, h )
-        local y = 3 + h * 0.5
-
-        draw.RoundedBox( 4, 0, 0, w, h, bgColor )
-        draw.SimpleText( s._name, "Trebuchet18", 48, y, nameColor, 0, 4 )
-        draw.SimpleText( s._leaderName, "DefaultSmall", 48, y - 1, playerColor, 0, 3 )
-
-        surface.SetDrawColor( s._squadColor:Unpack() )
-        surface.DrawRect( 0, 0, 4, h )
-    end
-
-    local PaintMembers = function( s, w, h )
-        if not s:IsHovered() then return end
-
-        DisableClipping( true )
-        surface.SetFont( "DermaDefault" )
-
-        local x, y = s:CursorPos()
-        local _, lineH = surface.GetTextSize( "A" )
-
-        w, h = 180, 8 + lineH * #s._members
-        x = x - w
-
-        surface.SetDrawColor( 60, 60, 60, 255 )
-        surface.DrawRect( x, y, w, h )
-
-        x, y = x + w * 0.5, y + 4
-
-        for i, member in ipairs( s._members ) do
-            draw.SimpleText( member.name, "DermaDefault", x, y + lineH * ( i - 1 ), nameColor, 1, 3 )
-        end
-
-        DisableClipping( false )
-    end
-
-    local UpdateButton = function( button, text, enabled )
-        button:SetEnabled( enabled )
-        button:SetText( L( text ) )
-        button:SizeToContentsX( 10 )
-    end
-
-    local OnClickJoin = function( s )
-        UpdateButton( s, "waiting_response", false )
-
-        self.StartCommand( self.JOIN_SQUAD )
-        net.WriteUInt( s._id, 16 )
-        net.SendToServer()
-    end
-
-    local maxMembers = self.GetMemberLimit()
+    local scrollPanel = vgui.Create( "DScrollPanel", listPanel )
+    scrollPanel:Dock( FILL )
+    scrollPanel.pnlCanvas:DockPadding( 0, 0, 4, 0 )
 
     for _, squad in ipairs( squads ) do
-        local p = vgui.Create( "DPanel", listPanel )
-        p:SetTall( 48 )
-        p:Dock( TOP )
-        p:DockMargin( 0, 0, 0, 2 )
-
-        p._id = squad.id
-        p._name = squad.name
-        p._leaderName = squad.leaderName
-        p._squadColor = Color( squad.r, squad.g, squad.b )
-        p.Paint = PaintLine
-
-        local icon = vgui.Create( "DImage", p )
-        icon:Dock( LEFT )
-        icon:DockMargin( 12, 12, 12, 12 )
-        icon:SetWide( 24 )
-        icon:SetImage( squad.icon )
-
-        local buttonJoin = vgui.Create( "DButton", p )
-        buttonJoin:Dock( RIGHT )
-        buttonJoin:DockMargin( 0, 4, 4, 4 )
-
-        ApplyTheme( buttonJoin )
-
-        local memberCount = #squad.members
-
-        if memberCount < maxMembers then
-            buttonJoin._id = squad.id
-            buttonJoin.DoClick = OnClickJoin
-
-            UpdateButton( buttonJoin, squad.isPublic and "join" or "request_to_join", true )
-        else
-            UpdateButton( buttonJoin, "full_squad", false )
-        end
-
-        local panelMembers = vgui.Create( "DPanel", p )
-        panelMembers:SetWide( 60 )
-        panelMembers:Dock( RIGHT )
-        panelMembers:DockMargin( 0, 4, 4, 4 )
-
-        for _, member in ipairs( squad.members ) do
-            member.name = SquadMenu.LimitText( member.name, 20 )
-        end
-
-        panelMembers._members = squad.members
-        panelMembers.PaintOver = PaintMembers
-
-        ApplyTheme( panelMembers )
-
-        local iconCount = vgui.Create( "DImage", panelMembers )
-        iconCount:Dock( LEFT )
-        iconCount:DockMargin( 4, 12, 4, 12 )
-        iconCount:SetWide( 16 )
-        iconCount:SetImage( "icon16/user.png" )
-
-        local labelCount = vgui.Create( "DLabel", panelMembers )
-        labelCount:SetText( memberCount .. "/" .. maxMembers )
-        labelCount:SizeToContents()
-        labelCount:Dock( FILL )
+        local line = vgui.Create( "Squad_Line", scrollPanel )
+        line:SetSquad( squad )
+        line:Dock( TOP )
+        line:DockMargin( 0, 0, 0, 4 )
     end
 end
 
 function SquadMenu:UpdateRequestsPanel()
-    if not IsValid( self.menuFrame ) then return end
+    local requestsPanel = self:GetPanel( "joinRequests" )
+    if not requestsPanel then return end
 
-    local requestsPanel = self.menuFrame.requestsPanel
-
-    if requestsPanel then
-        requestsPanel:Remove()
-    end
+    requestsPanel:Clear()
 
     local squad = self.mySquad
-    if not squad then return end
-    if squad.leaderId ~= LocalPlayer():SteamID() then return end
 
-    requestsPanel = vgui.Create( "DPanel", self.menuFrame )
-    requestsPanel:SetTall( 290 )
-    requestsPanel:Dock( BOTTOM )
-    requestsPanel:DockMargin( 0, 0, 0, 2 )
+    if not squad then
+        SetListStatus( requestsPanel, "not_in_a_squad" )
+        return
+    end
 
-    self.menuFrame.requestsPanel = requestsPanel
+    if squad.leaderId ~= LocalPlayer():SteamID() then
+        SetListStatus( requestsPanel, "not_squad_leader" )
+        return
+    end
 
-    ApplyTheme( requestsPanel )
+    local memberLimit = self.GetMemberLimit() - #squad.members
+
+    if memberLimit < 1 then
+        SetListStatus( requestsPanel, "member_limit_reached" )
+        return
+    end
 
     local panelHeader = vgui.Create( "DPanel", requestsPanel )
     panelHeader:SetTall( 36 )
-    panelHeader:DockPadding( 8, 4, 8, 4 )
+    panelHeader:DockPadding( 4, 2, 4, 2 )
     panelHeader:Dock( TOP )
 
     ApplyTheme( panelHeader )
@@ -364,14 +210,6 @@ function SquadMenu:UpdateRequestsPanel()
     labelRequests:Dock( LEFT )
 
     ApplyTheme( labelRequests )
-
-    local memberLimit = self.GetMemberLimit() - #squad.members
-
-    if memberLimit < 1 then
-        labelRequests:SetText( L"member_limit_reached" )
-        labelRequests:SizeToContents()
-        return
-    end
 
     local labelMemberCount = vgui.Create( "DLabel", panelHeader )
     labelMemberCount:Dock( RIGHT )
@@ -425,7 +263,7 @@ function SquadMenu:UpdateRequestsPanel()
         buttonAccept:SetText( L"accept" )
         buttonAccept:SetTall( 36 )
         buttonAccept:Dock( BOTTOM )
-        buttonAccept:DockMargin( 4, 4, 4, 4 )
+        buttonAccept:DockMargin( 4, 4, 4, 2 )
         buttonAccept.DoClick = OnClickAccept
 
         ApplyTheme( buttonAccept )
@@ -435,7 +273,7 @@ function SquadMenu:UpdateRequestsPanel()
 
     local requestsScroll = vgui.Create( "DScrollPanel", requestsPanel )
     requestsScroll:Dock( FILL )
-    requestsScroll.pnlCanvas:DockPadding( 4, 4, 4, 4 )
+    requestsScroll.pnlCanvas:DockPadding( 0, 4, 0, 4 )
 
     local bgColor = Color( 0, 0, 0 )
     local nameColor = Color( 255, 255, 255 )
@@ -462,7 +300,7 @@ function SquadMenu:UpdateRequestsPanel()
                 acceptedPlayers[id] = true
                 count = count + 1
             else
-                Derma_Message( L"member_limit", L"title", L"ok" )
+                Derma_Message( L"cannot_accept_more", L"title", L"ok" )
             end
         end
 
@@ -495,44 +333,40 @@ function SquadMenu:UpdateRequestsPanel()
     end
 end
 
-function SquadMenu:OpenMembersEditor()
+function SquadMenu:UpdateSquadMembersPanel()
+    local membersPanel = self:GetPanel( "squadMembers" )
+    if not membersPanel then return end
+
+    membersPanel:Clear()
+
     local squad = self.mySquad
-    if not squad then return end
 
-    local frame = vgui.Create( "DFrame" )
-    frame:SetTitle( L"kick" )
-    frame:SetIcon( "icon128/squad_menu.png" )
-    frame:SetPos( 0, 0 )
-    frame:SetSize( 300, 400 )
-    frame:SetSizable( true )
-    frame:SetDraggable( true )
-    frame:SetDeleteOnClose( true )
-    frame:SetScreenLock( true )
-    frame:SetMinWidth( 300 )
-    frame:SetMinHeight( 400 )
-    frame:Center()
-    frame:MakePopup()
-
-    frame.OnStartClosing = function()
-        self:OpenSquadMenu()
+    if not squad then
+        SetListStatus( membersPanel, "not_in_a_squad" )
+        return
     end
 
-    ApplyTheme( frame )
+    local memberCount = #squad.members
 
-    local membersScroll = vgui.Create( "DScrollPanel", frame )
+    if memberCount < 2 then
+        SetListStatus( membersPanel, "no_members" )
+        return
+    end
+
+    local localSteamId = LocalPlayer():SteamID()
+    local isLocalPlayerLeader = squad.leaderId == localSteamId
+
+    local membersScroll = vgui.Create( "DScrollPanel", membersPanel )
     membersScroll:Dock( FILL )
     membersScroll.pnlCanvas:DockPadding( 4, 4, 4, 4 )
 
-    if #squad.members < 2 then
-        local labelStatus = vgui.Create( "DLabel", membersScroll )
-        labelStatus:SetText( L"no_members" )
-        labelStatus:Dock( TOP )
-        labelStatus:DockMargin( 0, 8, 0, 0 )
-        labelStatus:SetContentAlignment( 5 )
+    local OnClickKick = function( s )
+        s:SetEnabled( false )
+        s:SetText( "..." )
 
-        ApplyTheme( labelStatus )
-
-        return
+        self.StartCommand( self.KICK )
+        net.WriteString( s._id )
+        net.SendToServer()
     end
 
     local bgColor = Color( 0, 0, 0 )
@@ -543,34 +377,34 @@ function SquadMenu:OpenMembersEditor()
         draw.SimpleText( s._name, "Trebuchet18", 42, h * 0.5, nameColor, 0, 1 )
     end
 
-    local ClickLine = function( s )
-        self.StartCommand( self.KICK )
-        net.WriteString( s._id )
-        net.SendToServer()
-
-        s:Remove()
-    end
-
     local players = SquadMenu.AllPlayersBySteamID()
-    local localSteamId = LocalPlayer():SteamID()
 
     for _, member in ipairs( squad.members ) do
         if member.id ~= localSteamId then
             local line = vgui.Create( "DPanel", membersScroll )
-            line:SetCursor( "hand" )
             line:SetTall( 28 )
             line:SetTall( 48 )
             line:Dock( TOP )
             line:DockMargin( 0, 0, 0, 2 )
+            line:DockPadding( 12, 12, 12, 12 )
 
-            line._id = member.id
             line._name = member.name
             line.Paint = PaintLine
-            line.OnMousePressed = ClickLine
+
+            if isLocalPlayerLeader then
+                local kick = vgui.Create( "DButton", line )
+                kick:SetText( L"kick" )
+                kick:SizeToContents()
+                kick:Dock( RIGHT )
+
+                kick._id = member.id
+                kick.DoClick = OnClickKick
+
+                ApplyTheme( kick )
+            end
 
             local avatar = vgui.Create( "AvatarImage", line )
             avatar:Dock( LEFT )
-            avatar:DockMargin( 12, 12, 12, 12 )
             avatar:SetWide( 24 )
 
             if players[member.id] then
@@ -600,7 +434,25 @@ local function CreateToggleButton( parent, label, isChecked, callback )
     return button
 end
 
-function SquadMenu:OpenSquadEditor( squad )
+function SquadMenu:UpdateSquadPropertiesPanel()
+    local propertiesPanel = self:GetPanel( "squadProperties" )
+    if not propertiesPanel then return end
+
+    propertiesPanel:Clear()
+
+    local squad = self.mySquad
+
+    if squad and squad.leaderId ~= LocalPlayer():SteamID() then
+        SetListStatus( propertiesPanel, "leave_first_create" )
+        return
+    end
+
+    local panelHeader = vgui.Create( "DPanel", propertiesPanel )
+    panelHeader:SetTall( 30 )
+    panelHeader:Dock( TOP )
+
+    ApplyTheme( panelHeader )
+
     local isNew = squad == nil
     local oldName = squad and squad.name or nil
 
@@ -608,6 +460,14 @@ function SquadMenu:OpenSquadEditor( squad )
         enableRings = true,
         color = Color( 0, 0, 255 )
     }
+
+    local labelStatus = vgui.Create( "DLabel", panelHeader )
+    labelStatus:SetText( L( isNew and "create_squad" or "edit_squad" ) )
+    labelStatus:SetContentAlignment( 5 )
+    labelStatus:SizeToContents()
+    labelStatus:Dock( FILL )
+
+    ApplyTheme( labelStatus )
 
     local data = {
         name = squad.name or string.format( L"default_squad_name", LocalPlayer():Nick() ),
@@ -622,27 +482,7 @@ function SquadMenu:OpenSquadEditor( squad )
         b = squad.color.b
     }
 
-    local frame = vgui.Create( "DFrame" )
-    frame:SetTitle( L"create_squad" )
-    frame:SetIcon( "icon128/squad_menu.png" )
-    frame:SetPos( 0, 0 )
-    frame:SetSize( 300, 500 )
-    frame:SetSizable( true )
-    frame:SetDraggable( true )
-    frame:SetDeleteOnClose( true )
-    frame:SetScreenLock( true )
-    frame:SetMinWidth( 300 )
-    frame:SetMinHeight( 500 )
-    frame:Center()
-    frame:MakePopup()
-
-    frame.OnStartClosing = function()
-        self:OpenSquadMenu()
-    end
-
-    ApplyTheme( frame )
-
-    local buttonCreate = vgui.Create( "DButton", frame )
+    local buttonCreate = vgui.Create( "DButton", propertiesPanel )
     buttonCreate:SetTall( 36 )
     buttonCreate:SetText( L( isNew and "create_squad" or "edit_squad" ) )
     buttonCreate:Dock( BOTTOM )
@@ -650,25 +490,24 @@ function SquadMenu:OpenSquadEditor( squad )
 
     ApplyTheme( buttonCreate )
 
-    buttonCreate.DoClick = function()
+    buttonCreate.DoClick = function( s )
+        s:SetEnabled( false )
+        s:SetText( "..." )
+
         self.StartCommand( self.SETUP_SQUAD )
         self.WriteTable( data )
         net.SendToServer()
-
-        frame.OnStartClosing = nil
-        frame:Close()
-
-        self:OpenSquadMenu( true )
     end
 
-    local panelProperties = vgui.Create( "DScrollPanel", frame )
-    panelProperties:Dock( FILL )
-    panelProperties.pnlCanvas:DockPadding( 8, 4, 8, 4 )
+    local scroll = vgui.Create( "DScrollPanel", propertiesPanel )
+    scroll:Dock( FILL )
+    scroll:DockMargin( 0, 4, 0, 0 )
+    scroll.pnlCanvas:DockPadding( 40, 8, 40, 8 )
 
-    ApplyTheme( panelProperties )
+    ApplyTheme( scroll )
 
     local function CreatePropertyLabel( text )
-        local label = vgui.Create( "DLabel", panelProperties )
+        local label = vgui.Create( "DLabel", scroll )
         label:Dock( TOP )
         label:DockMargin( 0, 0, 0, 2 )
         label:SetText( L( text ) )
@@ -681,7 +520,7 @@ function SquadMenu:OpenSquadEditor( squad )
 
     CreatePropertyLabel( "squad_name" )
 
-    local entryName = vgui.Create( "DTextEntry", panelProperties )
+    local entryName = vgui.Create( "DTextEntry", scroll )
     entryName:SetTall( 30 )
     entryName:Dock( TOP )
     entryName:DockMargin( 0, 0, 0, 4 )
@@ -695,9 +534,9 @@ function SquadMenu:OpenSquadEditor( squad )
 
     ApplyTheme( entryName )
 
-    CreatePropertyLabel( "squad_options" )
+    CreatePropertyLabel( "tab.squad_properties" )
 
-    local buttonIcon = vgui.Create( "DButton", panelProperties )
+    local buttonIcon = vgui.Create( "DButton", scroll )
     buttonIcon:SetTall( 30 )
     buttonIcon:SetIcon( data.icon )
     buttonIcon:SetText( L"choose_icon" )
@@ -725,21 +564,21 @@ function SquadMenu:OpenSquadEditor( squad )
         end
     end
 
-    CreateToggleButton( panelProperties, "squad_is_public", data.isPublic, function( checked )
+    CreateToggleButton( scroll, "squad_is_public", data.isPublic, function( checked )
         data.isPublic = checked
     end )
 
-    CreateToggleButton( panelProperties, "squad_friendly_fire", data.friendlyFire, function( checked )
+    CreateToggleButton( scroll, "squad_friendly_fire", data.friendlyFire, function( checked )
         data.friendlyFire = checked
     end )
 
-    CreateToggleButton( panelProperties, "squad_rings", data.enableRings, function( checked )
+    CreateToggleButton( scroll, "squad_rings", data.enableRings, function( checked )
         data.enableRings = checked
     end )
 
     CreatePropertyLabel( "squad_color" )
 
-    local colorPicker = vgui.Create( "DColorMixer", panelProperties )
+    local colorPicker = vgui.Create( "DColorMixer", scroll )
     colorPicker:SetTall( 200 )
     colorPicker:Dock( TOP )
     colorPicker:SetPalette( true )
