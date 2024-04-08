@@ -471,7 +471,7 @@ function SquadMenu:UpdateSquadPropertiesPanel()
 
     local data = {
         name = squad.name or string.format( L"default_squad_name", LocalPlayer():Nick() ),
-        icon = squad.icon or "games/16/garrysmod.png",
+        icon = squad.icon or "icon16/flag_blue.png",
 
         enableRings = squad.enableRings == true,
         friendlyFire = squad.friendlyFire == true,

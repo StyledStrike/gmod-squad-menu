@@ -120,7 +120,7 @@ end
 --- Set the details of this squad using a table.
 function Squad:SetBasicInfo( info )
     self.name = ValidateString( info.name, "Unnamed", SquadMenu.MAX_NAME_LENGTH )
-    self.icon = ValidateString( info.icon, "games/16/garrysmod.png", 256 )
+    self.icon = ValidateString( info.icon, "icon16/flag_blue.png", 256 )
 
     self.enableRings = info.enableRings == true
     self.friendlyFire = info.friendlyFire == true
