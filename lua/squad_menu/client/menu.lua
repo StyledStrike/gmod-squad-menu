@@ -14,6 +14,8 @@ local function SetListStatus( parent, text )
     labelStatus:Dock( FILL )
 
     ApplyTheme( labelStatus )
+
+    return labelStatus
 end
 
 function SquadMenu:CloseFrame()
@@ -62,6 +64,15 @@ function SquadMenu:OpenFrame()
     self:UpdateRequestsPanel()
     self:UpdateSquadMembersPanel()
     self:UpdateSquadPropertiesPanel()
+
+    local squad = self.mySquad
+    if not squad then return end
+
+    if #squad.members < 2 then
+        frame:SetActiveTabByIndex( 4 ) -- join requests
+    else
+        frame:SetActiveTabByIndex( 3 ) -- squad members
+    end
 end
 
 function SquadMenu:GetPanel( id )
@@ -179,6 +190,7 @@ function SquadMenu:UpdateRequestsPanel()
     if not requestsPanel then return end
 
     requestsPanel:Clear()
+    self.frame:SetTabNotificationCountByIndex( 4, 0 )
 
     local squad = self.mySquad
 
@@ -200,43 +212,30 @@ function SquadMenu:UpdateRequestsPanel()
     end
 
     local panelHeader = vgui.Create( "DPanel", requestsPanel )
-    panelHeader:SetTall( 36 )
-    panelHeader:DockPadding( 4, 2, 4, 2 )
+    panelHeader:SetTall( 30 )
     panelHeader:Dock( TOP )
+    panelHeader:DockMargin( 0, 0, 0, 4 )
 
     ApplyTheme( panelHeader )
 
-    local labelRequests = vgui.Create( "DLabel", panelHeader )
-    labelRequests:Dock( LEFT )
+    local labelStatus = vgui.Create( "DLabel", panelHeader )
+    labelStatus:SetText( L"requests_list" )
+    labelStatus:SetContentAlignment( 5 )
+    labelStatus:Dock( FILL )
 
-    ApplyTheme( labelRequests )
-
-    local labelMemberCount = vgui.Create( "DLabel", panelHeader )
-    labelMemberCount:Dock( RIGHT )
-
-    ApplyTheme( labelMemberCount )
+    ApplyTheme( labelStatus )
 
     local function UpdateMemberCount( current )
-        labelMemberCount:SetText( L( "slots" ) .. ": " .. current .. "/" .. self.GetMemberLimit() )
-        labelMemberCount:SizeToContents()
+        labelStatus:SetText( L( "slots" ) .. ": " .. current .. "/" .. self.GetMemberLimit() )
     end
 
     UpdateMemberCount( #squad.members )
 
-    if squad.isPublic then
-        labelRequests:SetText( L"no_requests_needed" )
-        labelRequests:SizeToContents()
-        return
-    end
+    self.frame:SetTabNotificationCountByIndex( 4, #squad.requests )
 
     if #squad.requests == 0 then
-        labelRequests:SetText( L"no_requests_yet" )
-        labelRequests:SizeToContents()
-        return
+        SetListStatus( requestsPanel, "no_requests_yet" )
     end
-
-    labelRequests:SetText( L"requests_list" )
-    labelRequests:SizeToContents()
 
     local buttonAccept
     local acceptedPlayers = {}
@@ -273,7 +272,7 @@ function SquadMenu:UpdateRequestsPanel()
 
     local requestsScroll = vgui.Create( "DScrollPanel", requestsPanel )
     requestsScroll:Dock( FILL )
-    requestsScroll.pnlCanvas:DockPadding( 0, 4, 0, 4 )
+    requestsScroll.pnlCanvas:DockPadding( 10, 0, 10, 4 )
 
     local bgColor = Color( 0, 0, 0 )
     local nameColor = Color( 255, 255, 255 )
@@ -347,6 +346,20 @@ function SquadMenu:UpdateSquadMembersPanel()
     end
 
     local memberCount = #squad.members
+
+    local panelHeader = vgui.Create( "DPanel", membersPanel )
+    panelHeader:SetTall( 30 )
+    panelHeader:Dock( TOP )
+    panelHeader:DockMargin( 0, 0, 0, 4 )
+
+    ApplyTheme( panelHeader )
+
+    local labelStatus = vgui.Create( "DLabel", panelHeader )
+    labelStatus:SetText( L( "slots" ) .. ": " .. memberCount .. "/" .. self.GetMemberLimit() )
+    labelStatus:SetContentAlignment( 5 )
+    labelStatus:Dock( FILL )
+
+    ApplyTheme( labelStatus )
 
     if memberCount < 2 then
         SetListStatus( membersPanel, "no_members" )
@@ -464,7 +477,6 @@ function SquadMenu:UpdateSquadPropertiesPanel()
     local labelStatus = vgui.Create( "DLabel", panelHeader )
     labelStatus:SetText( L( isNew and "create_squad" or "edit_squad" ) )
     labelStatus:SetContentAlignment( 5 )
-    labelStatus:SizeToContents()
     labelStatus:Dock( FILL )
 
     ApplyTheme( labelStatus )

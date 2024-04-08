@@ -111,11 +111,15 @@ function SquadMenu:SetupSquad( data )
     self:UpdateMembersHUD()
     self:SetMembers( data.members, isUpdate )
 
-    self:UpdateSquadList()
-    self:UpdateSquadStatePanel()
-    self:UpdateRequestsPanel()
-    self:UpdateSquadMembersPanel()
-    self:UpdateSquadPropertiesPanel()
+    if IsValid( self.frame ) then
+        self:UpdateSquadList()
+        self:UpdateSquadStatePanel()
+        self:UpdateRequestsPanel()
+        self:UpdateSquadMembersPanel()
+        self:UpdateSquadPropertiesPanel()
+
+        self.frame:SetActiveTabByIndex( 3 ) -- squad members
+    end
 end
 
 function SquadMenu:OnLeaveSquad( reason )
@@ -133,10 +137,14 @@ function SquadMenu:OnLeaveSquad( reason )
     self.mySquad = nil
     self:RemoveMembersHUD()
 
-    self:UpdateSquadStatePanel()
-    self:UpdateRequestsPanel()
-    self:UpdateSquadMembersPanel()
-    self:UpdateSquadPropertiesPanel()
+    if IsValid( self.frame ) then
+        self:UpdateSquadStatePanel()
+        self:UpdateRequestsPanel()
+        self:UpdateSquadMembersPanel()
+        self:UpdateSquadPropertiesPanel()
+
+        self.frame:SetActiveTabByIndex( 1 ) -- squad list
+    end
 end
 
 ----------

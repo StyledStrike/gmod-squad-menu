@@ -2,11 +2,14 @@ local L = SquadMenu.GetLanguageText
 local ApplyTheme = SquadMenu.Theme.Apply
 local colors = SquadMenu.Theme.colors
 
+colors.notifBackground = Color( 200, 0, 0, 255 )
+
 local TabButton = {}
 
 function TabButton:Init()
     self:SetCursor( "hand" )
     self.isSelected = false
+    self.notificationCount = 0
     self.icon = vgui.Create( "DImage", self )
 end
 
@@ -30,6 +33,15 @@ function TabButton:Paint( w, h )
     if self:IsHovered() then
         surface.SetDrawColor( colors.buttonHover:Unpack() )
         surface.DrawRect( 0, 0, w, h )
+    end
+
+    if self.notificationCount > 0 then
+        local size = 14
+        local x = w - size - 2
+        local y = h - size - 2
+
+        draw.RoundedBox( size * 0.5, x, y, size, size, colors.notifBackground )
+        draw.SimpleText( self.notificationCount, "TargetIDSmall", x + size * 0.5, y + size * 0.5, colors.buttonText, 1, 1 )
     end
 end
 
@@ -117,6 +129,12 @@ end
 function PANEL:SetActiveTabByIndex( index )
     if self.tabs[index] then
         self:SetActiveTab( self.tabs[index] )
+    end
+end
+
+function PANEL:SetTabNotificationCountByIndex( index, count )
+    if self.tabs[index] then
+        self.tabs[index].button.notificationCount = count
     end
 end
 
