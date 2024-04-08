@@ -118,11 +118,15 @@ function PANEL:AddTab( icon, tooltip )
 end
 
 function PANEL:SetActiveTab( tab )
-    for _, t in ipairs( self.tabs ) do
+    for i, t in ipairs( self.tabs ) do
         local isThisOne = t == tab
 
         t.button.isSelected = isThisOne
         t.panel:SetVisible( isThisOne )
+
+        if isThisOne then
+            self.lastTabIndex = i
+        end
     end
 end
 

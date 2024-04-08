@@ -42,14 +42,6 @@ CreateConVar(
 )
 
 CreateConVar(
-    "squad_name_render_distance",
-    "2000",
-    FCVAR_ARCHIVE + FCVAR_REPLICATED + FCVAR_NOTIFY,
-    "Sets the render distance of squad members' names.",
-    100, 10000
-)
-
-CreateConVar(
     "squad_members_position",
     "6",
     FCVAR_ARCHIVE + FCVAR_REPLICATED + FCVAR_NOTIFY,
@@ -76,11 +68,6 @@ end
 function SquadMenu.GetMemberLimit()
     local cvarLimit = GetConVar( "squad_max_members" )
     return cvarLimit and cvarLimit:GetInt() or 10
-end
-
-function SquadMenu.GetNameRenderDistance()
-    local cvarDistance = GetConVar( "squad_name_render_distance" )
-    return cvarDistance and cvarDistance:GetInt() or 1000
 end
 
 function SquadMenu.GetMembersPosition()

@@ -28,6 +28,7 @@ function Config:Reset()
     self.showRings = true
     self.showHalos = false
     self.enableSounds = true
+    self.drawDistance = 2000
 end
 
 function Config:Load()
@@ -42,9 +43,21 @@ function Config:Load()
     self.showRings = data.showRings == true
     self.showHalos = data.showHalos == true
     self.enableSounds = data.enableSounds == true
+
+    self.drawDistance = SquadMenu.ValidateNumber( data.drawDistance, 2000, 500, 50000 )
 end
 
-function Config:Save()
+function Config:Save( immediate )
+    if not immediate then
+        -- avoid spamming the file system
+        timer.Remove( "SquadMenu.SaveConfigDelay" )
+        timer.Create( "SquadMenu.SaveConfigDelay", 0.5, 1, function()
+            self:Save( true )
+        end )
+
+        return
+    end
+
     local path = SquadMenu.DATA_FILE
 
     local data = SquadMenu.TableToJSON( {
@@ -56,6 +69,10 @@ function Config:Save()
 
     SquadMenu.PrintF( "%s: writing %s", path, string.NiceSize( string.len( data ) ) )
     file.Write( path, data )
+
+    if SquadMenu.mySquad then
+        SquadMenu:UpdateMembersHUD()
+    end
 end
 
 Config:Load()
@@ -190,7 +207,9 @@ function SquadMenu:OnLeaveSquad( reason )
         self:UpdateSquadMembersPanel()
         self:UpdateSquadPropertiesPanel()
 
-        self.frame:SetActiveTabByIndex( 1 ) -- squad list
+        if self.frame.lastTabIndex ~= 5 then -- not in settings
+            self.frame:SetActiveTabByIndex( 1 ) -- squad list
+        end
 
         -- prevent calling list update twice when the leader leaves
         if reason ~= self.LEAVE_REASON_DELETED then

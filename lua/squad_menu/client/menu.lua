@@ -126,32 +126,40 @@ function SquadMenu:OpenFrame()
 
     ApplyTheme( scroll )
 
-    local function UpdateConfig()
-        self.Config:Save()
+    local sliderDistance = vgui.Create( "DNumSlider", scroll )
+    sliderDistance:SetText( L"settings.draw_distance" )
+    sliderDistance:SetMin( 500 )
+    sliderDistance:SetMax( 50000 )
+    sliderDistance:SetDecimals( 0 )
+    sliderDistance:SetValue( self.Config.drawDistance )
+    sliderDistance:Dock( TOP )
+    sliderDistance:DockMargin( 0, 0, 0, 8 )
 
-        if self.mySquad then
-            self:UpdateMembersHUD()
-        end
+    ApplyTheme( sliderDistance )
+
+    sliderDistance.OnValueChanged = function( _, value )
+        self.Config.drawDistance = self.ValidateNumber( value, 2000, 500, 50000 )
+        self.Config:Save()
     end
 
     CreateToggleButton( scroll, "settings.show_members", self.Config.showMembers, function( checked )
         self.Config.showMembers = checked
-        UpdateConfig()
+        self.Config:Save()
     end )
 
     CreateToggleButton( scroll, "settings.show_rings", self.Config.showRings, function( checked )
         self.Config.showRings = checked
-        UpdateConfig()
+        self.Config:Save()
     end )
 
     CreateToggleButton( scroll, "settings.show_halos", self.Config.showHalos, function( checked )
         self.Config.showHalos = checked
-        UpdateConfig()
+        self.Config:Save()
     end )
 
     CreateToggleButton( scroll, "settings.enable_sounds", self.Config.enableSounds, function( checked )
         self.Config.enableSounds = checked
-        UpdateConfig()
+        self.Config:Save()
     end )
 end
 

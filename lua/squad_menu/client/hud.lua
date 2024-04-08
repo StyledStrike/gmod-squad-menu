@@ -1,4 +1,5 @@
-local squad, nameDistance
+local squad, drawDistance
+local Config = SquadMenu.Config
 
 function SquadMenu:RemoveMembersHUD()
     if self.membersPanel then
@@ -15,17 +16,15 @@ end
 
 function SquadMenu:UpdateMembersHUD()
     squad = self.mySquad
+    drawDistance = Config.drawDistance * Config.drawDistance
 
-    nameDistance = self.GetNameRenderDistance()
-    nameDistance = nameDistance * nameDistance
-
-    if self.Config.showRings and self.mySquad.enableRings then
+    if Config.showRings and self.mySquad.enableRings then
         hook.Add( "PrePlayerDraw", "SquadMenu.DrawRing", self.DrawRing )
     else
         hook.Remove( "PrePlayerDraw", "SquadMenu.DrawRing" )
     end
 
-    if self.Config.showHalos then
+    if Config.showHalos then
         hook.Add( "PreDrawHalos", "SquadMenu.DrawHalos", self.DrawHalos )
     else
         hook.Remove( "PreDrawHalos", "SquadMenu.DrawHalos" )
@@ -35,12 +34,12 @@ function SquadMenu:UpdateMembersHUD()
     hook.Add( "HUDDrawTargetID", "SquadMenu.HideTargetInfo", self.HideTargetInfo )
 
     if self.membersPanel then
-        self.membersPanel:SetVisible( self.Config.showMembers )
+        self.membersPanel:SetVisible( Config.showMembers )
         return
     end
 
     local panel = vgui.Create( "DPanel" )
-    panel:SetVisible( self.Config.showMembers )
+    panel:SetVisible( Config.showMembers )
     panel:SetPaintBackground( false )
     panel:ParentToHUD()
     panel._OriginalInvalidateLayout = panel.InvalidateLayout
@@ -223,7 +222,7 @@ SquadMenu.HideTargetInfo = function()
     local ply = trace.Entity
     if not ply:IsPlayer() then return end
 
-    if squad.membersById[ply:SteamID()] and EyePos():DistToSqr( ply:EyePos() ) < nameDistance then
+    if squad.membersById[ply:SteamID()] and EyePos():DistToSqr( ply:EyePos() ) < drawDistance then
         return false
     end
 end
@@ -270,8 +269,8 @@ SquadMenu.DrawMemberTags = function()
         if ply and ply ~= me then
             dist = origin:DistToSqr( ply:EyePos() )
 
-            if dist < nameDistance then
-                SetAlphaMultiplier( 1 - dist / nameDistance )
+            if dist < drawDistance then
+                SetAlphaMultiplier( 1 - dist / drawDistance )
                 DrawTag( ply )
             end
         end
