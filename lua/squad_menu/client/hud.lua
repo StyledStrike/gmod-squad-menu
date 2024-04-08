@@ -8,6 +8,7 @@ function SquadMenu:RemoveMembersHUD()
     self.membersPanel = nil
 
     hook.Remove( "PrePlayerDraw", "SquadMenu.DrawRing" )
+    hook.Remove( "PreDrawHalos", "SquadMenu.DrawHalos" )
     hook.Remove( "HUDPaint", "SquadMenu.DrawMemberTags" )
     hook.Remove( "HUDDrawTargetID", "SquadMenu.HideTargetInfo" )
 end
@@ -18,18 +19,28 @@ function SquadMenu:UpdateMembersHUD()
     nameDistance = self.GetNameRenderDistance()
     nameDistance = nameDistance * nameDistance
 
-    if self.mySquad.enableRings then
+    if self.Config.showRings and self.mySquad.enableRings then
         hook.Add( "PrePlayerDraw", "SquadMenu.DrawRing", self.DrawRing )
     else
         hook.Remove( "PrePlayerDraw", "SquadMenu.DrawRing" )
     end
 
+    if self.Config.showHalos then
+        hook.Add( "PreDrawHalos", "SquadMenu.DrawHalos", self.DrawHalos )
+    else
+        hook.Remove( "PreDrawHalos", "SquadMenu.DrawHalos" )
+    end
+
     hook.Add( "HUDPaint", "SquadMenu.DrawMemberTags", self.DrawMemberTags )
     hook.Add( "HUDDrawTargetID", "SquadMenu.HideTargetInfo", self.HideTargetInfo )
 
-    if self.membersPanel then return end
+    if self.membersPanel then
+        self.membersPanel:SetVisible( self.Config.showMembers )
+        return
+    end
 
     local panel = vgui.Create( "DPanel" )
+    panel:SetVisible( self.Config.showMembers )
     panel:SetPaintBackground( false )
     panel:ParentToHUD()
     panel._OriginalInvalidateLayout = panel.InvalidateLayout
@@ -155,6 +166,27 @@ end
 
 ----------
 
+local AllPlayersBySteamID = SquadMenu.AllPlayersBySteamID
+
+SquadMenu.DrawHalos = function()
+    local players = AllPlayersBySteamID()
+    local me = LocalPlayer()
+    local i, t = 0, {}
+
+    for _, member in ipairs( squad.members ) do
+        local ply = players[member.id]
+
+        if ply and ply ~= me then
+            i = i + 1
+            t[i] = ply
+        end
+    end
+
+    halo.Add( t, squad.color, 2, 2, 1, true, true )
+end
+
+----------
+
 SquadMenu.HideTargetInfo = function()
     local trace = util.TraceLine( util.GetPlayerTrace( LocalPlayer() ) )
     if not trace.Hit or not trace.HitNonWorld then return end
@@ -201,7 +233,7 @@ SquadMenu.DrawMemberTags = function()
 
     local origin = EyePos()
     local me = LocalPlayer()
-    local players = SquadMenu.AllPlayersBySteamID()
+    local players = AllPlayersBySteamID()
 
     for _, member in ipairs( squad.members ) do
         local ply = players[member.id]

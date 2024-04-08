@@ -19,7 +19,56 @@ end
 
 ----------
 
+local Config = SquadMenu.Config or {}
+
+SquadMenu.Config = Config
+
+function Config:Reset()
+    self.showMembers = true
+    self.showRings = true
+    self.showHalos = false
+    self.enableSounds = true
+end
+
+function Config:Load()
+    self:Reset()
+
+    local data = file.Read( SquadMenu.DATA_FILE, "DATA" )
+    if not data then return end
+
+    data = SquadMenu.JSONToTable( data )
+
+    self.showMembers = data.showMembers == true
+    self.showRings = data.showRings == true
+    self.showHalos = data.showHalos == true
+    self.enableSounds = data.enableSounds == true
+end
+
+function Config:Save()
+    local path = SquadMenu.DATA_FILE
+
+    local data = SquadMenu.TableToJSON( {
+        showMembers = self.showMembers,
+        showRings = self.showRings,
+        showHalos = self.showHalos,
+        enableSounds = self.enableSounds
+    } )
+
+    SquadMenu.PrintF( "%s: writing %s", path, string.NiceSize( string.len( data ) ) )
+    file.Write( path, data )
+end
+
+Config:Load()
+
+----------
+
 local L = SquadMenu.GetLanguageText
+
+function SquadMenu:PlayUISound( path )
+    if self.Config.enableSounds then
+        sound.Play( path, Vector(), 0, 120, 0.75 )
+    end
+end
 
 function SquadMenu:SetMembers( newMembers, printMessages )
     local members = self.mySquad.members
@@ -104,8 +153,7 @@ function SquadMenu:SetupSquad( data )
 
         self.ChatPrint( L"squad_welcome", squad.color, " " .. squad.name )
         self.ChatPrint( L"chat_tip", " " .. table.concat( self.CHAT_PREFIXES, ", " ) )
-
-        sound.Play( "buttons/combine_button3.wav", Vector(), 0, 120, 0.75 )
+        self:PlayUISound( "buttons/combine_button3.wav" )
     end
 
     self:UpdateMembersHUD()
@@ -130,8 +178,7 @@ function SquadMenu:OnLeaveSquad( reason )
 
     if self.mySquad then
         self.ChatPrint( L( reasonText[reason] or "left_squad" ) )
-
-        sound.Play( "buttons/combine_button2.wav", Vector(), 0, 120, 0.75 )
+        self:PlayUISound( "buttons/combine_button2.wav" )
     end
 
     self.mySquad = nil
@@ -198,7 +245,7 @@ commands[SquadMenu.REQUESTS_LIST] = function()
     end
 
     if newCount > 0 then
-        sound.Play( "buttons/combine_button1.wav", Vector(), 0, 120, 0.8 )
+        SquadMenu:PlayUISound( "buttons/combine_button1.wav" )
     end
 
     SquadMenu:UpdateRequestsPanel()

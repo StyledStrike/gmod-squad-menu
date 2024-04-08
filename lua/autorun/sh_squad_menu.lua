@@ -8,6 +8,9 @@ SquadMenu = {
     -- Max. length of a squad name
     MAX_NAME_LENGTH = 30,
 
+    -- Settings file
+    DATA_FILE = "squad_menu.json",
+
     -- Size limit for JSON data
     MAX_JSON_SIZE = 49152, -- 48 kibibytes
 

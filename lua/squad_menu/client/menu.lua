@@ -14,8 +14,38 @@ local function SetListStatus( parent, text )
     labelStatus:Dock( FILL )
 
     ApplyTheme( labelStatus )
+end
 
-    return labelStatus
+local function CreateToggleButton( parent, label, isChecked, callback )
+    local button = vgui.Create( "DButton", parent )
+    button:SetTall( 30 )
+    button:SetIcon( isChecked and "icon16/accept.png" or "icon16/cancel.png" )
+    button:SetText( L( label ) )
+    button:Dock( TOP )
+    button:DockMargin( 0, 0, 0, 4 )
+    button._isChecked = isChecked
+
+    ApplyTheme( button )
+
+    button.DoClick = function( s )
+        s._isChecked = not s._isChecked
+        button:SetIcon( s._isChecked and "icon16/accept.png" or "icon16/cancel.png" )
+        callback( s._isChecked )
+    end
+
+    return button
+end
+
+local function CreatePropertyLabel( text, parent )
+    local label = vgui.Create( "DLabel", parent )
+    label:Dock( TOP )
+    label:DockMargin( 0, 0, 0, 2 )
+    label:SetText( L( text ) )
+    label:SetTall( 26 )
+
+    ApplyTheme( label )
+
+    return label
 end
 
 function SquadMenu:CloseFrame()
@@ -66,13 +96,63 @@ function SquadMenu:OpenFrame()
     self:UpdateSquadPropertiesPanel()
 
     local squad = self.mySquad
-    if not squad then return end
 
-    if #squad.members < 2 then
-        frame:SetActiveTabByIndex( 4 ) -- join requests
-    else
-        frame:SetActiveTabByIndex( 3 ) -- squad members
+    if squad then
+        if #squad.members < 2 then
+            frame:SetActiveTabByIndex( 4 ) -- join requests
+        else
+            frame:SetActiveTabByIndex( 3 ) -- squad members
+        end
     end
+
+    -- Settings
+    local panelHeader = vgui.Create( "DPanel", panels.settings )
+    panelHeader:SetTall( 30 )
+    panelHeader:Dock( TOP )
+
+    ApplyTheme( panelHeader )
+
+    local labelStatus = vgui.Create( "DLabel", panelHeader )
+    labelStatus:SetText( L"tab.settings" )
+    labelStatus:SetContentAlignment( 5 )
+    labelStatus:Dock( FILL )
+
+    ApplyTheme( labelStatus )
+
+    local scroll = vgui.Create( "DScrollPanel", panels.settings )
+    scroll:Dock( FILL )
+    scroll:DockMargin( 0, 4, 0, 0 )
+    scroll.pnlCanvas:DockPadding( 40, 8, 40, 8 )
+
+    ApplyTheme( scroll )
+
+    local function UpdateConfig()
+        self.Config:Save()
+
+        if self.mySquad then
+            self:UpdateMembersHUD()
+        end
+    end
+
+    CreateToggleButton( scroll, "settings.show_members", self.Config.showMembers, function( checked )
+        self.Config.showMembers = checked
+        UpdateConfig()
+    end )
+
+    CreateToggleButton( scroll, "settings.show_rings", self.Config.showRings, function( checked )
+        self.Config.showRings = checked
+        UpdateConfig()
+    end )
+
+    CreateToggleButton( scroll, "settings.show_halos", self.Config.showHalos, function( checked )
+        self.Config.showHalos = checked
+        UpdateConfig()
+    end )
+
+    CreateToggleButton( scroll, "settings.enable_sounds", self.Config.enableSounds, function( checked )
+        self.Config.enableSounds = checked
+        UpdateConfig()
+    end )
 end
 
 function SquadMenu:GetPanel( id )
@@ -433,26 +513,6 @@ function SquadMenu:UpdateSquadMembersPanel()
     end
 end
 
-local function CreateToggleButton( parent, label, isChecked, callback )
-    local button = vgui.Create( "DButton", parent )
-    button:SetTall( 30 )
-    button:SetIcon( isChecked and "icon16/accept.png" or "icon16/cancel.png" )
-    button:SetText( L( label ) )
-    button:Dock( TOP )
-    button:DockMargin( 0, 0, 0, 4 )
-    button._isChecked = isChecked
-
-    ApplyTheme( button )
-
-    button.DoClick = function( s )
-        s._isChecked = not s._isChecked
-        button:SetIcon( s._isChecked and "icon16/accept.png" or "icon16/cancel.png" )
-        callback( s._isChecked )
-    end
-
-    return button
-end
-
 function SquadMenu:UpdateSquadPropertiesPanel()
     local propertiesPanel = self:GetPanel( "squadProperties" )
     if not propertiesPanel then return end
@@ -524,19 +584,7 @@ function SquadMenu:UpdateSquadPropertiesPanel()
 
     ApplyTheme( scroll )
 
-    local function CreatePropertyLabel( text )
-        local label = vgui.Create( "DLabel", scroll )
-        label:Dock( TOP )
-        label:DockMargin( 0, 0, 0, 2 )
-        label:SetText( L( text ) )
-        label:SetTall( 26 )
-
-        ApplyTheme( label )
-
-        return label
-    end
-
-    CreatePropertyLabel( "squad_name" )
+    CreatePropertyLabel( "squad_name", scroll )
 
     local entryName = vgui.Create( "DTextEntry", scroll )
     entryName:SetTall( 30 )
@@ -552,7 +600,7 @@ function SquadMenu:UpdateSquadPropertiesPanel()
 
     ApplyTheme( entryName )
 
-    CreatePropertyLabel( "tab.squad_properties" )
+    CreatePropertyLabel( "tab.squad_properties", scroll )
 
     local buttonIcon = vgui.Create( "DButton", scroll )
     buttonIcon:SetTall( 30 )
@@ -594,7 +642,7 @@ function SquadMenu:UpdateSquadPropertiesPanel()
         data.enableRings = checked
     end )
 
-    CreatePropertyLabel( "squad_color" )
+    CreatePropertyLabel( "squad_color", scroll )
 
     local colorPicker = vgui.Create( "DColorMixer", scroll )
     colorPicker:SetTall( 200 )
