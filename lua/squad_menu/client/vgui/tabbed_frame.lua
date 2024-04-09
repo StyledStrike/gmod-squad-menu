@@ -56,10 +56,13 @@ vgui.Register( "Squad_TabButton", TabButton, "DPanel" )
 local PANEL = {}
 
 function PANEL:Init()
+    local w = math.max( ScrH() * 0.7, 600 )
+    local h = math.max( ScrH() * 0.45, 400 )
+
     self:SetTitle( L"title" )
     self:SetIcon( "icon128/squad_menu.png" )
     self:SetPos( 0, 0 )
-    self:SetSize( 600, 400 )
+    self:SetSize( w, h )
     self:SetSizable( true )
     self:SetDraggable( true )
     self:SetDeleteOnClose( true )

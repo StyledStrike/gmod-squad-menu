@@ -606,16 +606,16 @@ function SquadMenu:UpdateSquadPropertiesPanel()
         net.SendToServer()
     end
 
-    local scroll = vgui.Create( "DScrollPanel", propertiesPanel )
-    scroll:Dock( FILL )
-    scroll:DockMargin( 0, 4, 0, 0 )
-    scroll.pnlCanvas:DockPadding( 40, 8, 40, 8 )
+    local leftPanel = vgui.Create( "DPanel", propertiesPanel )
+    leftPanel:Dock( FILL )
+    leftPanel:DockMargin( 0, 4, 0, 0 )
+    leftPanel:DockPadding( 8, 8, 8, 8 )
 
-    ApplyTheme( scroll )
+    ApplyTheme( leftPanel )
 
-    CreatePropertyLabel( "squad_name", scroll )
+    CreatePropertyLabel( "squad_name", leftPanel )
 
-    local entryName = vgui.Create( "DTextEntry", scroll )
+    local entryName = vgui.Create( "DTextEntry", leftPanel )
     entryName:SetTall( 30 )
     entryName:Dock( TOP )
     entryName:DockMargin( 0, 0, 0, 4 )
@@ -629,9 +629,9 @@ function SquadMenu:UpdateSquadPropertiesPanel()
 
     ApplyTheme( entryName )
 
-    CreatePropertyLabel( "tab.squad_properties", scroll )
+    CreatePropertyLabel( "tab.squad_properties", leftPanel )
 
-    local buttonIcon = vgui.Create( "DButton", scroll )
+    local buttonIcon = vgui.Create( "DButton", leftPanel )
     buttonIcon:SetTall( 30 )
     buttonIcon:SetIcon( data.icon )
     buttonIcon:SetText( L"choose_icon" )
@@ -659,21 +659,29 @@ function SquadMenu:UpdateSquadPropertiesPanel()
         end
     end
 
-    CreateToggleButton( scroll, "squad_is_public", data.isPublic, function( checked )
+    CreateToggleButton( leftPanel, "squad_is_public", data.isPublic, function( checked )
         data.isPublic = checked
     end )
 
-    CreateToggleButton( scroll, "squad_friendly_fire", data.friendlyFire, function( checked )
+    CreateToggleButton( leftPanel, "squad_friendly_fire", data.friendlyFire, function( checked )
         data.friendlyFire = checked
     end )
 
-    CreateToggleButton( scroll, "squad_rings", data.enableRings, function( checked )
+    CreateToggleButton( leftPanel, "squad_rings", data.enableRings, function( checked )
         data.enableRings = checked
     end )
 
-    CreatePropertyLabel( "squad_color", scroll )
+    local rightPanel = vgui.Create( "DPanel", propertiesPanel )
+    rightPanel:SetWide( 250 )
+    rightPanel:Dock( RIGHT )
+    rightPanel:DockMargin( 0, 4, 0, 0 )
+    rightPanel:DockPadding( 8, 8, 8, 8 )
 
-    local colorPicker = vgui.Create( "DColorMixer", scroll )
+    ApplyTheme( rightPanel )
+
+    CreatePropertyLabel( "squad_color", rightPanel )
+
+    local colorPicker = vgui.Create( "DColorMixer", rightPanel )
     colorPicker:SetTall( 200 )
     colorPicker:Dock( TOP )
     colorPicker:SetPalette( true )
