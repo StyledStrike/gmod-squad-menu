@@ -9,6 +9,7 @@ local UpdateButton = function( button, text, enabled )
 end
 
 local PANEL = {}
+local DEFAULT_HEIGHT = 48
 
 function PANEL:Init()
     self.squad = {
@@ -55,14 +56,14 @@ function PANEL:Paint( w, h )
     draw.RoundedBox( 4, 0, 0, w, h, colors.black )
 
     if self:IsHovered() then
-        draw.RoundedBox( 4, 0, 0, w, 48, colors.buttonBackground )
+        draw.RoundedBox( 4, 0, 0, w, DEFAULT_HEIGHT, colors.buttonBackground )
     end
 
     surface.SetDrawColor( self.squad.color:Unpack() )
     surface.DrawRect( 0, 0, 4, h )
 
-    draw.SimpleText( self.squad.name, "Trebuchet18", 48, 26, colors.buttonText, 0, 4 )
-    draw.SimpleText( self.squad.leaderName, "DefaultSmall", 48, 26, colors.buttonTextDisabled, 0, 3 )
+    draw.SimpleText( self.squad.name, "Trebuchet18", 48, 4 + DEFAULT_HEIGHT * 0.5, colors.buttonText, 0, 4 )
+    draw.SimpleText( self.squad.leaderName, "DefaultSmall", 48, 1 + DEFAULT_HEIGHT * 0.5, colors.buttonTextDisabled, 0, 3 )
 end
 
 function PANEL:OnMousePressed( keyCode )
@@ -78,9 +79,9 @@ function PANEL:SetSquad( squad )
     self.icon:SetImage( squad.icon )
 
     local maxMembers = SquadMenu.GetMemberLimit()
-    local memberCount = #squad.members
+    local count = #squad.members
 
-    if memberCount < maxMembers then
+    if count < maxMembers then
         UpdateButton( self.buttonJoin, squad.isPublic and "join" or "request_to_join", true )
     else
         UpdateButton( self.buttonJoin, "full_squad", false )
@@ -89,7 +90,7 @@ function PANEL:SetSquad( squad )
     self.memberCount:Clear()
 
     local labelCount = vgui.Create( "DLabel", self.memberCount )
-    labelCount:SetText( memberCount .. "/" .. maxMembers )
+    labelCount:SetText( count .. "/" .. maxMembers )
     labelCount:SizeToContents()
     labelCount:Dock( FILL )
 
@@ -108,7 +109,14 @@ end
 function PANEL:SetExpanded( expanded, scroll )
     self.isExpanded = expanded
 
-    self:SetTall( expanded and 198 or 48 )
+    local height = DEFAULT_HEIGHT
+    local memberHeight = 30
+
+    if expanded then
+        height = height + 4 + memberHeight * math.min( #self.squad.members, 5 )
+    end
+
+    self:SetTall( height )
     self:InvalidateLayout()
 
     if expanded and scroll then
@@ -124,8 +132,8 @@ function PANEL:SetExpanded( expanded, scroll )
 
     local membersScroll = vgui.Create( "DScrollPanel", self )
     membersScroll:Dock( FILL )
-    membersScroll:DockMargin( 6, 48, 4, 4 )
-    membersScroll.pnlCanvas:DockPadding( 2, 2, 2, 2 )
+    membersScroll:DockMargin( 0, DEFAULT_HEIGHT, 0, 0 )
+    membersScroll.pnlCanvas:DockPadding( 6, 2, 2, 2 )
 
     self.membersScroll = membersScroll
 
@@ -134,7 +142,7 @@ function PANEL:SetExpanded( expanded, scroll )
     for _, member in ipairs( self.squad.members ) do
         local line = vgui.Create( "DPanel", membersScroll )
         line:SetBackgroundColor( colors.panelBackground )
-        line:SetTall( 28 )
+        line:SetTall( memberHeight - 2 )
         line:Dock( TOP )
         line:DockMargin( 0, 0, 0, 2 )
 
@@ -149,6 +157,14 @@ function PANEL:SetExpanded( expanded, scroll )
 
         if players[member.id] then
             avatar:SetPlayer( players[member.id], 64 )
+        end
+
+        if member.id == self.squad.leaderId then
+            local leaderIcon = vgui.Create( "DImage", line )
+            leaderIcon:SetWide( 16 )
+            leaderIcon:SetImage( "icon16/award_star_gold_3.png" )
+            leaderIcon:Dock( RIGHT )
+            leaderIcon:DockMargin( 0, 6, 4, 6 )
         end
     end
 end
