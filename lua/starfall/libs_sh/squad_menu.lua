@@ -55,6 +55,36 @@ if SERVER then
         return SquadMenu:GetSquad( id ) ~= nil
     end
 
+    --- Returns a table with all available squads. Each item contains these keys:
+    --- - number id
+    --- - string name
+    --- - string icon
+    --- - Player leader
+    --- - Color color
+    --- - boolean isPublic
+    --- - boolean friendlyFire
+    -- @server
+    -- @return table
+    function squad_library.getAll()
+        local all, i = {}, 0
+
+        for id, squad in pairs( SquadMenu.squads ) do
+            i = i + 1
+            all[i] = {
+                id = id,
+                name = squad.name,
+                icon = squad.icon,
+                leader = WrapPlayer( squad.leader ),
+                color = WrapColor( Color( squad.r, squad.g, squad.b ) ),
+
+                isPublic = squad.isPublic,
+                friendlyFire = squad.friendlyFire
+            }
+        end
+
+        return all
+    end
+
     --- Finds a squad by it's ID and returns the name. Returns nil if the squad does not exist.
     -- @server
     -- @param number id The squad ID
