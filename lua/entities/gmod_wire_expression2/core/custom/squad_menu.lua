@@ -50,3 +50,14 @@ e2function array getSquadMembers( number id )
 
     return members
 end
+
+e2function array getAllSquadIDs()
+    local all, i = {}, 0
+
+    for id, _ in pairs( SquadMenu.squads ) do
+        i = i + 1
+        all[i] = id
+    end
+
+    return all
+end
