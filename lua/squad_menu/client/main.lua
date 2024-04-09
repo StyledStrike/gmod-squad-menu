@@ -28,7 +28,9 @@ function Config:Reset()
     self.showRings = true
     self.showHalos = false
     self.enableSounds = true
-    self.drawDistance = 2000
+
+    self.nameDistance = 3000
+    self.haloDistance = 8000
 end
 
 function Config:Load()
@@ -44,7 +46,8 @@ function Config:Load()
     self.showHalos = data.showHalos == true
     self.enableSounds = data.enableSounds == true
 
-    self.drawDistance = SquadMenu.ValidateNumber( data.drawDistance, 2000, 500, 50000 )
+    self.nameDistance = SquadMenu.ValidateNumber( data.nameDistance, 3000, 500, 50000 )
+    self.haloDistance = SquadMenu.ValidateNumber( data.haloDistance, 8000, 500, 50000 )
 end
 
 function Config:Save( immediate )

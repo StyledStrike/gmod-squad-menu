@@ -126,19 +126,35 @@ function SquadMenu:OpenFrame()
 
     ApplyTheme( scroll )
 
-    local sliderDistance = vgui.Create( "DNumSlider", scroll )
-    sliderDistance:SetText( L"settings.draw_distance" )
-    sliderDistance:SetMin( 500 )
-    sliderDistance:SetMax( 50000 )
-    sliderDistance:SetDecimals( 0 )
-    sliderDistance:SetValue( self.Config.drawDistance )
-    sliderDistance:Dock( TOP )
-    sliderDistance:DockMargin( 0, 0, 0, 8 )
+    local sliderNameDist = vgui.Create( "DNumSlider", scroll )
+    sliderNameDist:SetText( L"settings.name_draw_distance" )
+    sliderNameDist:SetMin( 500 )
+    sliderNameDist:SetMax( 50000 )
+    sliderNameDist:SetDecimals( 0 )
+    sliderNameDist:SetValue( self.Config.nameDistance )
+    sliderNameDist:Dock( TOP )
+    sliderNameDist:DockMargin( 0, 0, 0, 8 )
 
-    ApplyTheme( sliderDistance )
+    ApplyTheme( sliderNameDist )
 
-    sliderDistance.OnValueChanged = function( _, value )
-        self.Config.drawDistance = self.ValidateNumber( value, 2000, 500, 50000 )
+    sliderNameDist.OnValueChanged = function( _, value )
+        self.Config.nameDistance = self.ValidateNumber( value, 2000, 500, 50000 )
+        self.Config:Save()
+    end
+
+    local sliderHaloDist = vgui.Create( "DNumSlider", scroll )
+    sliderHaloDist:SetText( L"settings.halo_draw_distance" )
+    sliderHaloDist:SetMin( 500 )
+    sliderHaloDist:SetMax( 50000 )
+    sliderHaloDist:SetDecimals( 0 )
+    sliderHaloDist:SetValue( self.Config.haloDistance )
+    sliderHaloDist:Dock( TOP )
+    sliderHaloDist:DockMargin( 0, 0, 0, 8 )
+
+    ApplyTheme( sliderHaloDist )
+
+    sliderHaloDist.OnValueChanged = function( _, value )
+        self.Config.haloDistance = self.ValidateNumber( value, 8000, 500, 50000 )
         self.Config:Save()
     end
 

@@ -1,5 +1,5 @@
-local squad, drawDistance
-local Config = SquadMenu.Config
+local squad
+local nameDistance, haloDistance
 
 function SquadMenu:RemoveMembersHUD()
     if self.membersPanel then
@@ -15,16 +15,19 @@ function SquadMenu:RemoveMembersHUD()
 end
 
 function SquadMenu:UpdateMembersHUD()
-    squad = self.mySquad
-    drawDistance = Config.drawDistance * Config.drawDistance
+    local config = self.Config
 
-    if Config.showRings and self.mySquad.enableRings then
+    squad = self.mySquad
+    nameDistance = config.nameDistance * config.nameDistance
+    haloDistance = config.haloDistance * config.haloDistance
+
+    if config.showRings and self.mySquad.enableRings then
         hook.Add( "PrePlayerDraw", "SquadMenu.DrawRing", self.DrawRing )
     else
         hook.Remove( "PrePlayerDraw", "SquadMenu.DrawRing" )
     end
 
-    if Config.showHalos then
+    if config.showHalos then
         hook.Add( "PreDrawHalos", "SquadMenu.DrawHalos", self.DrawHalos )
     else
         hook.Remove( "PreDrawHalos", "SquadMenu.DrawHalos" )
@@ -34,12 +37,12 @@ function SquadMenu:UpdateMembersHUD()
     hook.Add( "HUDDrawTargetID", "SquadMenu.HideTargetInfo", self.HideTargetInfo )
 
     if self.membersPanel then
-        self.membersPanel:SetVisible( Config.showMembers )
+        self.membersPanel:SetVisible( config.showMembers )
         return
     end
 
     local panel = vgui.Create( "DPanel" )
-    panel:SetVisible( Config.showMembers )
+    panel:SetVisible( config.showMembers )
     panel:SetPaintBackground( false )
     panel:ParentToHUD()
     panel._OriginalInvalidateLayout = panel.InvalidateLayout
@@ -210,7 +213,7 @@ SquadMenu.DrawHalos = function()
         if ply and ply ~= me then
             dist = origin:DistToSqr( ply:EyePos() )
 
-            if dist < drawDistance then
+            if dist < haloDistance then
                 i = i + 1
                 t[i] = ply
             end
@@ -231,7 +234,7 @@ SquadMenu.HideTargetInfo = function()
     local ply = trace.Entity
     if not ply:IsPlayer() then return end
 
-    if squad.membersById[ply:SteamID()] and EyePos():DistToSqr( ply:EyePos() ) < drawDistance then
+    if squad.membersById[ply:SteamID()] and EyePos():DistToSqr( ply:EyePos() ) < nameDistance then
         return false
     end
 end
@@ -279,8 +282,8 @@ SquadMenu.DrawMemberTags = function()
         if ply and ply ~= me then
             dist = origin:DistToSqr( ply:EyePos() )
 
-            if dist < drawDistance then
-                SetAlphaMultiplier( 1 - dist / drawDistance )
+            if dist < nameDistance then
+                SetAlphaMultiplier( 1 - dist / nameDistance )
                 DrawTag( ply )
             end
         end
