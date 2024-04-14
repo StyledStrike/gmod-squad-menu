@@ -1,3 +1,4 @@
+local IsValid = IsValid
 local blockDamage = SquadMenu.blockDamage or {}
 
 SquadMenu.squads = SquadMenu.squads or {}
@@ -70,9 +71,18 @@ end
 --- Get a table containing details of this squad.
 function Squad:GetBasicInfo()
     local members = {}
+    local count = 0
 
-    for i, member in ipairs( self.members ) do
-        members[i] = { id = member:SteamID(), name = member:Nick() }
+    -- Take the chance to cleanup invalid members, if/when this somehow happens
+    for i = #self.members, 1, -1 do
+        local member = self.members[i]
+
+        if IsValid( member ) then
+            count = count + 1
+            members[count] = { id = member:SteamID(), name = member:Nick() }
+        else
+            table.remove( self.members, i )
+        end
     end
 
     return {
