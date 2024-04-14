@@ -503,36 +503,34 @@ function SquadMenu:UpdateSquadMembersPanel()
     local players = SquadMenu.AllPlayersBySteamID()
 
     for _, member in ipairs( squad.members ) do
-        if member.id ~= localSteamId then
-            local line = vgui.Create( "DPanel", membersScroll )
-            line:SetTall( 28 )
-            line:SetTall( 48 )
-            line:Dock( TOP )
-            line:DockMargin( 0, 0, 0, 2 )
-            line:DockPadding( 12, 12, 12, 12 )
+        local line = vgui.Create( "DPanel", membersScroll )
+        line:SetTall( 28 )
+        line:SetTall( 48 )
+        line:Dock( TOP )
+        line:DockMargin( 0, 0, 0, 2 )
+        line:DockPadding( 12, 12, 12, 12 )
 
-            line._name = member.name
-            line.Paint = PaintLine
+        line._name = member.name
+        line.Paint = PaintLine
 
-            if isLocalPlayerLeader then
-                local kick = vgui.Create( "DButton", line )
-                kick:SetText( L"kick" )
-                kick:SizeToContents()
-                kick:Dock( RIGHT )
+        if isLocalPlayerLeader and member.id ~= localSteamId then
+            local kick = vgui.Create( "DButton", line )
+            kick:SetText( L"kick" )
+            kick:SizeToContents()
+            kick:Dock( RIGHT )
 
-                kick._id = member.id
-                kick.DoClick = OnClickKick
+            kick._id = member.id
+            kick.DoClick = OnClickKick
 
-                ApplyTheme( kick )
-            end
+            ApplyTheme( kick )
+        end
 
-            local avatar = vgui.Create( "AvatarImage", line )
-            avatar:Dock( LEFT )
-            avatar:SetWide( 24 )
+        local avatar = vgui.Create( "AvatarImage", line )
+        avatar:Dock( LEFT )
+        avatar:SetWide( 24 )
 
-            if players[member.id] then
-                avatar:SetPlayer( players[member.id], 64 )
-            end
+        if players[member.id] then
+            avatar:SetPlayer( players[member.id], 64 )
         end
     end
 end
