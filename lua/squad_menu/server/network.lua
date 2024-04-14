@@ -135,10 +135,7 @@ hook.Add( "PlayerDisconnected", "SquadMenu.PlayerCleanup", function( ply )
         c.players[id] = nil
     end
 
-    -- Check for and remove player from join requests on all squads
-    for _, squad in pairs( SquadMenu.squads ) do
-        squad.requests[id] = nil
-    end
+    SquadMenu:CleanupRequests( id )
 
     -- Remove player from their squad, if they have one
     local squadId = ply:GetSquadID()

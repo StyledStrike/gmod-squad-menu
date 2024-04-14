@@ -252,22 +252,31 @@ commands[SquadMenu.REQUESTS_LIST] = function()
         alreadyRequested[member.id] = true
     end
 
-    -- Compare the new request IDs against what we already got
-    local requestIds = SquadMenu.ReadTable()
+    -- Compare the new requests against what we already got
+    local newRequests = SquadMenu.ReadTable()
     local newCount = 0
 
-    for _, member in ipairs( requestIds ) do
-        if not alreadyRequested[member.id] then
+    for id, name in pairs( newRequests ) do
+        if not alreadyRequested[id] then
             -- This is a new request for us
-            requests[#requests + 1] = member
+            requests[#requests + 1] = { id = id, name = name }
             newCount = newCount + 1
 
-            SquadMenu.ChatPrint( string.format( L"request_message", member.name ) )
+            SquadMenu.ChatPrint( string.format( L"request_message", name ) )
         end
     end
 
     if newCount > 0 then
         SquadMenu:PlayUISound( "buttons/combine_button1.wav" )
+    end
+
+    -- Remove requests we already got if they aren't on the new requests list
+    for i = #requests, 1, -1 do
+        local member = requests[i]
+
+        if not newRequests[member.id] then
+            table.remove( requests, i )
+        end
     end
 
     SquadMenu:UpdateRequestsPanel()

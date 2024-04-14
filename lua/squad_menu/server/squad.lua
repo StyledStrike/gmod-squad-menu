@@ -32,6 +32,19 @@ function SquadMenu:DeleteSquad( id )
     end
 end
 
+--- Check for and remove player from join requests on all squads
+function SquadMenu:CleanupRequests( steamId, dontSync )
+    for _, squad in pairs( self.squads ) do
+        if squad.requests[steamId] then
+            squad.requests[steamId] = nil
+
+            if not dontSync then
+                squad:SyncRequests()
+            end
+        end
+    end
+end
+
 local Squad = {}
 
 Squad.__index = Squad
@@ -135,6 +148,13 @@ function Squad:SyncWithMembers()
     net.Send( self.members )
 end
 
+--- Send the requests list to the squad leader.
+function Squad:SyncRequests()
+    SquadMenu.StartCommand( SquadMenu.REQUESTS_LIST )
+    SquadMenu.WriteTable( self.requests )
+    net.Send( self.leader )
+end
+
 --- Add a player as a new member.
 function Squad:AddMember( ply, dontSync )
     if ply:GetSquadID() == self.id then return end
@@ -152,10 +172,10 @@ function Squad:AddMember( ply, dontSync )
 
     local id = ply:SteamID()
 
-    -- Check for and remove player from join requests on all squads
-    for _, squad in pairs( SquadMenu.squads ) do
-        squad.requests[id] = nil
-    end
+    -- We don't send the requests list to the squad leaders (2nd "true" parameter)
+    -- because "player_joined_squad" will already tell them to remove
+    -- this player from their own copies of the join requests list.
+    SquadMenu:CleanupRequests( id, true )
 
     SquadMenu.StartEvent( "player_joined_squad", {
         squadId = self.id,
@@ -197,17 +217,9 @@ function Squad:RequestToJoin( ply )
     local id = ply:SteamID()
 
     if self.requests[id] then return end
+
     self.requests[id] = ply:Nick()
-
-    local requests = {}
-
-    for rid, name in pairs( self.requests ) do
-        requests[#requests + 1] = { id = rid, name = name }
-    end
-
-    SquadMenu.StartCommand( SquadMenu.REQUESTS_LIST )
-    SquadMenu.WriteTable( requests )
-    net.Send( self.leader )
+    self:SyncRequests()
 end
 
 --- Accept all the join requests from a list of players' SteamIDs.
