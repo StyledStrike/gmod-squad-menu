@@ -374,6 +374,7 @@ function SquadMenu:UpdateRequestsPanel()
         buttonAccept:Dock( BOTTOM )
         buttonAccept:DockMargin( 4, 4, 4, 2 )
         buttonAccept.DoClick = OnClickAccept
+        buttonAccept._themeHighlight = true
 
         ApplyTheme( buttonAccept )
     end
@@ -592,6 +593,7 @@ function SquadMenu:UpdateSquadPropertiesPanel()
     buttonCreate:SetText( L( isNew and "create_squad" or "edit_squad" ) )
     buttonCreate:Dock( BOTTOM )
     buttonCreate:DockMargin( 0, 4, 0, 0 )
+    buttonCreate._themeHighlight = true
 
     ApplyTheme( buttonCreate )
 

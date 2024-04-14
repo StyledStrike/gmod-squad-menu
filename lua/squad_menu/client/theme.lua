@@ -99,8 +99,10 @@ Theme.classes["DButton"] = {
     Paint = function( self, w, h )
         self._hoverAnim = Lerp( FrameTime() * 10, self._hoverAnim, ( self:IsEnabled() and self.Hovered ) and 1 or 0 )
 
+        local bgColor = self._themeHighlight and colors.buttonPress or colors.buttonBackground
+
         DrawRoundedBox( 4, 0, 0, w, h, colors.buttonBorder )
-        DrawRoundedBox( 4, 1, 1, w - 2, h - 2, self:IsEnabled() and colors.buttonBackground or colors.buttonBackgroundDisabled )
+        DrawRoundedBox( 4, 1, 1, w - 2, h - 2, self:IsEnabled() and bgColor or colors.buttonBackgroundDisabled )
 
         local r, g, b, a = colors.buttonHover:Unpack()
 
@@ -108,7 +110,7 @@ Theme.classes["DButton"] = {
         DrawRect( 1, 1, w - 2, h - 2 )
 
         if self:IsDown() or self.m_bSelected then
-            DrawRoundedBox( 4, 1, 1, w - 2, h - 2, colors.buttonPress )
+            DrawRoundedBox( 4, 1, 1, w - 2, h - 2, self._themeHighlight and colors.buttonBackground or colors.buttonPress )
         end
     end,
 
