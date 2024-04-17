@@ -4,7 +4,12 @@ commands[SquadMenu.SQUAD_LIST] = function( ply )
     local data = {}
 
     for _, squad in pairs( SquadMenu.squads ) do
-        data[#data + 1] = squad:GetBasicInfo()
+        if IsValid( squad.leader ) then
+            data[#data + 1] = squad:GetBasicInfo()
+        else
+            SquadMenu.PrintF( "The squad #%d has a invalid leader! Removing...", squad.id )
+            squad:Disband()
+        end
     end
 
     SquadMenu.StartCommand( SquadMenu.SQUAD_LIST )
