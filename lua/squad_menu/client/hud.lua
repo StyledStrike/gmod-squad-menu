@@ -259,17 +259,17 @@ local function DrawTag( ply )
     SetColor( COLORS.BOX_BG:Unpack() )
     DrawRect( x - 2, y, boxW + 4, h )
 
-    DrawSimpleText( text, "TargetIDSmall", pos.x, y, COLORS.WHITE, 1, 0 )
+    DrawSimpleText( text, "SquadMenuInfo", pos.x, y, COLORS.WHITE, 1, 0 )
 
     if isAlive then
         DrawHealthBar( x - 2, y + 16, boxW + 4, 4, Clamp( ply:Health() / 100, 0, 1 ), ply:Armor() / 100 )
     else
-        DrawSimpleText( "*", "TargetIDSmall", pos.x, y + 14, COLORS.LOW_HEALTH, 1, 0 )
+        DrawSimpleText( "*", "SquadMenuInfo", pos.x, y + 14, COLORS.LOW_HEALTH, 1, 0 )
     end
 end
 
 SquadMenu.DrawMemberTags = function()
-    surface.SetFont( "TargetIDSmall" )
+    surface.SetFont( "SquadMenuInfo" )
 
     local origin = EyePos()
     local me = LocalPlayer()

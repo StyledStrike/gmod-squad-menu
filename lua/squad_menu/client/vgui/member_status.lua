@@ -6,7 +6,7 @@ local Approach = math.Approach
 
 local SetColor = surface.SetDrawColor
 local SetMaterial = surface.SetMaterial
-local DrawSimpleText = draw.SimpleText
+local DrawOutlinedText = draw.SimpleTextOutlined
 local DrawTexturedRect = surface.DrawTexturedRect
 local DrawRect = surface.DrawRect
 
@@ -15,7 +15,8 @@ local matGradient = Material( "vgui/gradient-r" )
 
 local COLORS = {
     WHITE = Color( 255, 255, 255, 255 ),
-    LOW_HEALTH = Color( 250, 20, 20, 255 )
+    LOW_HEALTH = Color( 250, 20, 20, 255 ),
+    OUTLINE = Color( 0, 0, 0, 255 )
 }
 
 local PANEL = {}
@@ -79,11 +80,11 @@ function PANEL:Paint( w, h )
 
     if self.alive then
         local barH = h * 0.2
-        DrawHealthBar( 2, h - barH - 6, w - split - 6, barH, self.healthAnim, self.armorAnim )
+        DrawHealthBar( 2, h - barH - 5, w - split - 6, barH, self.healthAnim, self.armorAnim )
     end
 
-    DrawSimpleText( self.name, "TargetIDSmall", 2, 2 + h * 0.5,
-        self.alive and COLORS.WHITE or COLORS.LOW_HEALTH, 0, self.alive and 4 or 1, 1 )
+    DrawOutlinedText( self.name, "SquadMenuInfo", 2, 2 + h * 0.5,
+        self.alive and COLORS.WHITE or COLORS.LOW_HEALTH, 0, self.alive and 4 or 1, 1, COLORS.OUTLINE )
 end
 
 function PANEL:PerformLayout( w, h )
