@@ -49,6 +49,14 @@ CreateConVar(
     1, 9
 )
 
+CreateConVar(
+    "squad_broadcast_creation_message",
+    "1",
+    FCVAR_ARCHIVE + FCVAR_REPLICATED + FCVAR_NOTIFY,
+    "When set to 1, Squad Menu will print when a new squad is created on the chat.",
+    0, 1
+)
+
 function SquadMenu.PrintF( str, ... )
     MsgC( SquadMenu.THEME_COLOR, "[Squad Menu] ", Color( 255, 255, 255 ), string.format( str, ... ), "\n" )
 end
@@ -66,13 +74,18 @@ function SquadMenu.JSONToTable( s )
 end
 
 function SquadMenu.GetMemberLimit()
-    local cvarLimit = GetConVar( "squad_max_members" )
-    return cvarLimit and cvarLimit:GetInt() or 10
+    local cvar = GetConVar( "squad_max_members" )
+    return cvar and cvar:GetInt() or 10
 end
 
 function SquadMenu.GetMembersPosition()
-    local cvarPosition = GetConVar( "squad_members_position" )
-    return cvarPosition and cvarPosition:GetInt() or 6
+    local cvar = GetConVar( "squad_members_position" )
+    return cvar and cvar:GetInt() or 6
+end
+
+function SquadMenu.GetShowCreationMessage()
+    local cvar = GetConVar( "squad_broadcast_creation_message" )
+    return cvar and cvar:GetInt() or 1
 end
 
 function SquadMenu.AllPlayersBySteamID()

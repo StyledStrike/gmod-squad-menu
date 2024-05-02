@@ -335,6 +335,11 @@ commands[SquadMenu.BROADCAST_EVENT] = function()
     elseif event == "squad_created" or event == "squad_deleted" then
         SquadMenu:RequestSquadListUpdate()
 
+        if event == "squad_created" and data.name and SquadMenu.GetShowCreationMessage() > 0 then
+            local color = Color( data.r, data.g, data.b )
+            SquadMenu.ChatPrint( string.format( L"squad_created", data.leaderName ), color, " " .. data.name )
+        end
+
     elseif event == "members_chat" then
         local squad = SquadMenu.mySquad
         if not squad then return end

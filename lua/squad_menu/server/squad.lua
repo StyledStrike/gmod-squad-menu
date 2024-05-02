@@ -75,9 +75,6 @@ function SquadMenu:CreateSquad( leader )
 
     self.PrintF( "Created squad #%d for %s", id, leader:SteamID() )
 
-    self.StartEvent( "squad_created", { id = id } )
-    net.Broadcast()
-
     return self.squads[id]
 end
 

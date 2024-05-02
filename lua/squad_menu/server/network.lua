@@ -49,6 +49,16 @@ commands[SquadMenu.SETUP_SQUAD] = function( ply )
     local squad = SquadMenu:CreateSquad( ply )
     squad:SetBasicInfo( data )
     squad:AddMember( ply )
+
+    SquadMenu.StartEvent( "squad_created", {
+        id = squadId,
+        name = squad.name,
+        leaderName = ply:Nick(),
+        r = squad.r,
+        g = squad.g,
+        b = squad.b
+    } )
+    net.Broadcast()
 end
 
 commands[SquadMenu.JOIN_SQUAD] = function( ply )
