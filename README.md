@@ -18,8 +18,11 @@ You can check a Player's squad by calling this function:
 -- Available both on SERVER and CLIENT.
 -- Will be -1 if this player is not in a squad.
 local id = Player:GetSquadID()
+```
 
--- You can use this function to get the squad instance.
+You can use this function to get a specific squad instance:
+
+```lua
 local squad = SquadMenu:GetSquad( id )
 
 --[[
@@ -32,12 +35,14 @@ local squad = SquadMenu:GetSquad( id )
     squad.enableRings   - boolean
     squad.friendlyFire  - boolean
     squad.isPublic      - boolean
-
-    squad.members - Player[]
-
-    Please do not modify squad.members directly.
-    Check out squad:AddMember and squad:RemoveMember if you need to. 
 ]]
+
+-- You can get the player entities that are part of the squad with:
+local players = squad:GetActiveMembers()
+
+-- "p" represents a player Entity or a string you can get from SquadMenu.GetPlayerId:
+squad:AddMember( p )
+squad:RemoveMember( p, reason ) -- reason is a number from SquadMenu.LEAVE_REASON_*
 ```
 
 You can also filter the squad name before it's assigned by using the `ShouldAllowSquadName` hook **on the server**.
