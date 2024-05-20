@@ -114,7 +114,7 @@ end )
 
 -- On disconnect, remove join requests and this player from their squad, if they have one
 hook.Add( "PlayerDisconnected", "SquadMenu.PlayerCleanup", function( ply )
-    SquadMenu:CleanupRequests( PID( ply ) )
+    SquadMenu:CleanupRequests( SquadMenu.GetPlayerId( ply ) )
 
     local squad = SquadMenu:GetSquad( ply:GetSquadID() )
 
