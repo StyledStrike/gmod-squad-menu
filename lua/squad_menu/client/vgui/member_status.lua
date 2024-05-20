@@ -27,7 +27,8 @@ function PANEL:Init()
     self:SetPlayer()
 end
 
-function PANEL:SetPlayer( id, name )
+function PANEL:SetPlayer( id, name, squad )
+    self.squad = squad
     self.playerId = id
     self.validateTimer = 0
 
@@ -54,11 +55,11 @@ function PANEL:Think()
 
     self.validateTimer = RealTime() + 1
 
-    local ply = player.GetBySteamID( self.playerId )
+    local ply = SquadMenu.FindPlayerById( self.playerId )
 
     if ply then
         self.ply = ply
-        self.name = SquadMenu.ValidateString( ply:Nick(), "-", 20 )
+        self.name = SquadMenu.ValidateString( ply:Nick(), "", 20 )
         self.avatar:SetPlayer( ply, 64 )
     end
 end
@@ -66,8 +67,10 @@ end
 function PANEL:Paint( w, h )
     local split = h
 
-    SetColor( self.squad.color:Unpack() )
-    DrawRect( w - split, 0, split, h )
+    if self.squad then
+        SetColor( self.squad.color:Unpack() )
+        DrawRect( w - split, 0, split, h )
+    end
 
     SetColor( 0, 0, 0, 240 )
     SetMaterial( matGradient )

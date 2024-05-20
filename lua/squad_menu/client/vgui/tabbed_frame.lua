@@ -2,8 +2,6 @@ local L = SquadMenu.GetLanguageText
 local ApplyTheme = SquadMenu.Theme.Apply
 local colors = SquadMenu.Theme.colors
 
-colors.notifBackground = Color( 200, 0, 0, 255 )
-
 local TabButton = {}
 
 function TabButton:Init()
@@ -40,7 +38,7 @@ function TabButton:Paint( w, h )
         local x = w - size - 2
         local y = h - size - 2
 
-        draw.RoundedBox( size * 0.5, x, y, size, size, colors.notifBackground )
+        draw.RoundedBox( size * 0.5, x, y, size, size, colors.indicatorBackground )
         draw.SimpleText( self.notificationCount, "TargetIDSmall", x + size * 0.5, y + size * 0.5, colors.buttonText, 1, 1 )
     end
 end

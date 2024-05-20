@@ -1,108 +1,6 @@
-concommand.Add(
-    "squad_menu",
-    function() SquadMenu:OpenFrame() end,
-    nil,
-    "Opens the squad menu."
-)
-
-if engine.ActiveGamemode() == "sandbox" then
-    list.Set(
-        "DesktopWindows",
-        "SquadMenuDesktopIcon",
-        {
-            title = SquadMenu.GetLanguageText( "title" ),
-            icon = "materials/icon128/squad_menu.png",
-            init = function() SquadMenu:OpenFrame() end
-        }
-    )
+function SquadMenu.GetLanguageText( id )
+    return language.GetPhrase( "squad_menu." .. id ):Trim()
 end
-
-hook.Add( "InitPostEntity", "SquadMenu.CreateFont", function()
-    surface.CreateFont( "SquadMenuInfo", {
-        font = "Roboto-Condensed",
-        extended = true,
-        size = math.floor( ScrH() * 0.016 ),
-        weight = 600,
-        blursize = 0,
-        scanlines = 0,
-        antialias = true,
-        underline = false,
-        italic = false,
-        strikeout = false,
-        symbol = false,
-        rotary = false,
-        shadow = false,
-        additive = false,
-        outline = false
-    } )
-end )
-
-----------
-
-local Config = SquadMenu.Config or {}
-
-SquadMenu.Config = Config
-
-function Config:Reset()
-    self.showMembers = true
-    self.showRings = true
-    self.showHalos = false
-    self.enableSounds = true
-
-    self.nameDistance = 3000
-    self.haloDistance = 8000
-end
-
-function Config:Load()
-    self:Reset()
-
-    local data = file.Read( SquadMenu.DATA_FILE, "DATA" )
-    if not data then return end
-
-    data = SquadMenu.JSONToTable( data )
-
-    self.showMembers = data.showMembers == true
-    self.showRings = data.showRings == true
-    self.showHalos = data.showHalos == true
-    self.enableSounds = data.enableSounds == true
-
-    self.nameDistance = SquadMenu.ValidateNumber( data.nameDistance, 3000, 500, 50000 )
-    self.haloDistance = SquadMenu.ValidateNumber( data.haloDistance, 8000, 500, 50000 )
-end
-
-function Config:Save( immediate )
-    if not immediate then
-        -- avoid spamming the file system
-        timer.Remove( "SquadMenu.SaveConfigDelay" )
-        timer.Create( "SquadMenu.SaveConfigDelay", 0.5, 1, function()
-            self:Save( true )
-        end )
-
-        return
-    end
-
-    local path = SquadMenu.DATA_FILE
-
-    local data = SquadMenu.TableToJSON( {
-        showMembers = self.showMembers,
-        showRings = self.showRings,
-        showHalos = self.showHalos,
-        enableSounds = self.enableSounds
-    } )
-
-    SquadMenu.PrintF( "%s: writing %s", path, string.NiceSize( string.len( data ) ) )
-    file.Write( path, data )
-
-    if SquadMenu.mySquad then
-        SquadMenu:UpdateMembersHUD()
-    end
-end
-
-Config:Load()
-
-----------
-
-local L = SquadMenu.GetLanguageText
 
 function SquadMenu:PlayUISound( path )
     if self.Config.enableSounds then
@@ -110,15 +8,26 @@ function SquadMenu:PlayUISound( path )
     end
 end
 
+local L = SquadMenu.GetLanguageText
+
+function SquadMenu.ChatPrint( ... )
+    chat.AddText( SquadMenu.THEME_COLOR, "[" .. L( "title" )  .. "] ", Color( 255, 255, 255 ), ... )
+end
+
+--- Set the current members of the local player's squad.
+--- Updates the HUD and shows join/leave messages (if `printMessages` is `true`).
+---
+--- `newMembers` is an array where items are also arrays
+--- with a number (player id) and a string (player name).
 function SquadMenu:SetMembers( newMembers, printMessages )
     local members = self.mySquad.members
     local membersById = self.mySquad.membersById
-
     local keep = {}
 
     -- Add new members that we do not have on our end
-    for _, member in ipairs( newMembers ) do
-        local id = member.id
+    for _, m in ipairs( newMembers ) do
+        local id = m[1]
+        local member = { id = id, name = m[2] }
 
         keep[id] = true
 
@@ -134,8 +43,8 @@ function SquadMenu:SetMembers( newMembers, printMessages )
         end
     end
 
-    -- Remove members that we have on our end but do not exist in newMembers
-    -- Backwards loop because we use table.remove
+    -- Remove members that we have locally but do not exist on `newMembers`.
+    -- Backwards loop because we use `table.remove`
     for i = #members, 1, -1 do
         local member = members[i]
         local id = member.id
@@ -151,34 +60,22 @@ function SquadMenu:SetMembers( newMembers, printMessages )
             end
         end
     end
-
-    -- Remove join requests from players in newMembers
-    local requests = self.mySquad.requests
-
-    -- Backwards loop because we use table.remove
-    for i = #requests, 1, -1 do
-        local member = requests[i]
-        local id = member.id
-
-        if keep[id] then
-            table.remove( requests, i )
-        end
-    end
 end
 
+--- Set the local player's squad.
+--- `data` is a table that comes from `squad:GetBasicInfo`.
 function SquadMenu:SetupSquad( data )
     local squad = self.mySquad or { id = -1 }
+    local isUpdate = data.id == squad.id
 
     self.mySquad = squad
-
-    local isUpdate = data.id == squad.id
 
     squad.id = data.id
     squad.name = data.name
     squad.icon = data.icon
 
     squad.leaderId = data.leaderId
-    squad.leaderName = data.leaderName
+    squad.leaderName = data.leaderName or ""
 
     squad.enableRings = data.enableRings
     squad.friendlyFire = data.friendlyFire
@@ -234,7 +131,7 @@ function SquadMenu:OnLeaveSquad( reason )
             self.frame:SetActiveTabByIndex( 1 ) -- squad list
         end
 
-        -- prevent calling list update twice when the leader leaves
+        -- Prevent requesting the list update twice when the leader leaves
         if reason ~= self.LEAVE_REASON_DELETED then
             self:RequestSquadListUpdate()
         end
@@ -273,10 +170,10 @@ commands[SquadMenu.REQUESTS_LIST] = function()
     end
 
     -- Compare the new requests against what we already got
-    local newRequests = SquadMenu.ReadTable()
+    local requestsById = SquadMenu.ReadTable()
     local newCount = 0
 
-    for id, name in pairs( newRequests ) do
+    for id, name in pairs( requestsById ) do
         if not alreadyRequested[id] then
             -- This is a new request for us
             requests[#requests + 1] = { id = id, name = name }
@@ -294,7 +191,7 @@ commands[SquadMenu.REQUESTS_LIST] = function()
     for i = #requests, 1, -1 do
         local member = requests[i]
 
-        if not newRequests[member.id] then
+        if not requestsById[member.id] then
             table.remove( requests, i )
         end
     end
@@ -303,7 +200,7 @@ commands[SquadMenu.REQUESTS_LIST] = function()
 end
 
 commands[SquadMenu.BROADCAST_EVENT] = function()
-    local data = SquadMenu.JSONToTable( net.ReadString() )
+    local data = SquadMenu.ReadTable()
     local event = data.event
 
     SquadMenu.PrintF( "Event received: %s", event )
@@ -360,4 +257,43 @@ net.Receive( "squad_menu.command", function()
     end
 
     commands[cmd]( ply, ent )
+end )
+
+concommand.Add(
+    "squad_menu",
+    function() SquadMenu:OpenFrame() end,
+    nil,
+    "Opens the squad menu."
+)
+
+if engine.ActiveGamemode() == "sandbox" then
+    list.Set(
+        "DesktopWindows",
+        "SquadMenuDesktopIcon",
+        {
+            title = SquadMenu.GetLanguageText( "title" ),
+            icon = "materials/icon128/squad_menu.png",
+            init = function() SquadMenu:OpenFrame() end
+        }
+    )
+end
+
+hook.Add( "InitPostEntity", "SquadMenu.CreateFont", function()
+    surface.CreateFont( "SquadMenuInfo", {
+        font = "Roboto-Condensed",
+        extended = true,
+        size = math.floor( ScrH() * 0.016 ),
+        weight = 600,
+        blursize = 0,
+        scanlines = 0,
+        antialias = true,
+        underline = false,
+        italic = false,
+        strikeout = false,
+        symbol = false,
+        rotary = false,
+        shadow = false,
+        additive = false,
+        outline = false
+    } )
 end )

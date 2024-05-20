@@ -1,4 +1,4 @@
---- Squad Menu library. Contains functions for getting more information about squads
+--- Squad Menu library. Contains functions for getting more information about squads.
 -- @name squad
 -- @class library
 -- @libtbl squad_library
@@ -41,6 +41,7 @@ function player_methods:getSquadID()
 end
 
 if SERVER then
+    local FindByPID = SquadMenu.FindPlayerById
     local CheckLuaType = SF.CheckLuaType
     local WrapColor = instance.Types.Color.Wrap
     local WrapPlayer = instance.Types.Player.Wrap
@@ -59,22 +60,29 @@ if SERVER then
     --- - number id
     --- - string name
     --- - string icon
-    --- - Player leader
+    --- - Player? leader
     --- - Color color
     --- - boolean isPublic
     --- - boolean friendlyFire
     -- @server
     -- @return table
     function squad_library.getAll()
-        local all, i = {}, 0
+        local all, count = {}, 0
 
         for id, squad in pairs( SquadMenu.squads ) do
-            i = i + 1
-            all[i] = {
+            count = count + 1
+
+            local leader = FindByPID( squad.leaderId )
+
+            if IsValid( leader ) then
+                leader = WrapPlayer( leader )
+            end
+
+            all[count] = {
                 id = id,
                 name = squad.name,
                 icon = squad.icon,
-                leader = WrapPlayer( squad.leader ),
+                leader = leader,
                 color = WrapColor( Color( squad.r, squad.g, squad.b ) ),
 
                 isPublic = squad.isPublic,
@@ -115,7 +123,10 @@ if SERVER then
         CheckLuaType( id, TYPE_NUMBER )
 
         local squad = SquadMenu:GetSquad( id )
-        return squad and #squad.members or nil
+        if not squad then return end
+
+        local _, count = squad:GetActiveMembers()
+        return count
     end
 
     --- Returns an table of players in the squad. Returns nil if the squad does not exist.
@@ -128,12 +139,10 @@ if SERVER then
         local squad = SquadMenu:GetSquad( id )
         if not squad then return end
 
-        local members = {}
+        local members, count = squad:GetActiveMembers()
 
-        for _, ply in ipairs( squad.members ) do
-            if IsValid( ply ) then
-                members[#members + 1] = WrapPlayer( ply )
-            end
+        for i = 1, count do
+            members[i] = WrapPlayer( members[i] )
         end
 
         return members

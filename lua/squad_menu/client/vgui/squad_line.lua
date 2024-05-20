@@ -63,7 +63,7 @@ function PANEL:Paint( w, h )
     surface.DrawRect( 0, 0, 4, h )
 
     draw.SimpleText( self.squad.name, "Trebuchet18", 48, 4 + DEFAULT_HEIGHT * 0.5, colors.buttonText, 0, 4 )
-    draw.SimpleText( self.squad.leaderName, "DefaultSmall", 48, 1 + DEFAULT_HEIGHT * 0.5, colors.buttonTextDisabled, 0, 3 )
+    draw.SimpleText( self.squad.leaderName or "<Server>", "DefaultSmall", 48, 1 + DEFAULT_HEIGHT * 0.5, colors.buttonTextDisabled, 0, 3 )
 end
 
 function PANEL:OnMousePressed( keyCode )
@@ -72,6 +72,8 @@ function PANEL:OnMousePressed( keyCode )
     end
 end
 
+--- Set the squad data.
+--- `squad` is a table that comes from `squad:GetBasicInfo`.
 function PANEL:SetSquad( squad )
     squad.color = Color( squad.r, squad.g, squad.b )
 
@@ -137,9 +139,11 @@ function PANEL:SetExpanded( expanded, scroll )
 
     self.membersScroll = membersScroll
 
-    local players = SquadMenu.AllPlayersBySteamID()
+    local byId = SquadMenu.AllPlayersById()
 
-    for _, member in ipairs( self.squad.members ) do
+    for _, m in ipairs( self.squad.members ) do
+        local id = m[1]
+
         local line = vgui.Create( "DPanel", membersScroll )
         line:SetBackgroundColor( colors.panelBackground )
         line:SetTall( memberHeight - 2 )
@@ -147,7 +151,7 @@ function PANEL:SetExpanded( expanded, scroll )
         line:DockMargin( 0, 0, 0, 2 )
 
         local name = vgui.Create( "DLabel", line )
-        name:SetText( member.name )
+        name:SetText( m[2] )
         name:Dock( FILL )
 
         local avatar = vgui.Create( "AvatarImage", line )
@@ -155,11 +159,13 @@ function PANEL:SetExpanded( expanded, scroll )
         avatar:Dock( LEFT )
         avatar:DockMargin( 4, 4, 4, 4 )
 
-        if players[member.id] then
-            avatar:SetPlayer( players[member.id], 64 )
+        if byId[id] then
+            avatar:SetPlayer( byId[id], 64 )
         end
 
-        if member.id == self.squad.leaderId then
+        if id == self.squad.leaderId then
+            line:SetZPos( -1 )
+
             local leaderIcon = vgui.Create( "DImage", line )
             leaderIcon:SetWide( 16 )
             leaderIcon:SetImage( "icon16/award_star_gold_3.png" )

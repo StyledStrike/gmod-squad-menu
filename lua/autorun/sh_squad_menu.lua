@@ -1,38 +1,41 @@
-SquadMenu = {
-    -- Chat prefixes that allow messaging squad members only
-    CHAT_PREFIXES = { "/s", "!s", "/p", "!pchat" },
+SquadMenu = SquadMenu or {}
 
-    -- Primary color used for the UI theme
-    THEME_COLOR = Color( 34, 52, 142 ),
-
-    -- Max. length of a squad name
-    MAX_NAME_LENGTH = 30,
-
+if CLIENT then
     -- Settings file
-    DATA_FILE = "squad_menu.json",
+    SquadMenu.DATA_FILE = "squad_menu.json"
+end
 
-    -- Size limit for JSON data
-    MAX_JSON_SIZE = 49152, -- 48 kibibytes
+-- Chat prefixes that allow messaging squad members only
+SquadMenu.CHAT_PREFIXES = { "/s", "!s", "/p", "!pchat" }
 
-    -- Used on net.WriteUInt for the command ID
-    COMMAND_SIZE = 3,
+-- Primary color used for the UI theme
+SquadMenu.THEME_COLOR = Color( 34, 52, 142 )
 
-    -- Command IDs (Max. ID when COMMAND_SIZE = 3 is 7)
-    BROADCAST_EVENT = 0,
-    SQUAD_LIST = 1,
-    SETUP_SQUAD = 2,
-    JOIN_SQUAD = 3,
-    LEAVE_SQUAD = 4,
-    ACCEPT_REQUESTS = 5,
-    REQUESTS_LIST = 6,
-    KICK = 7,
+-- Max. length of a squad name
+SquadMenu.MAX_NAME_LENGTH = 30
 
-    -- Reasons given when a member is removed from a squad
-    LEAVE_REASON_DELETED = 0,
-    LEAVE_REASON_LEFT = 1,
-    LEAVE_REASON_KICKED = 2
-}
+-- Size limit for JSON data
+SquadMenu.MAX_JSON_SIZE = 49152 -- 48 kibibytes
 
+-- Used on net.WriteUInt for the command ID
+SquadMenu.COMMAND_SIZE = 3
+
+-- Command IDs (Max. ID when COMMAND_SIZE = 3 is 7)
+SquadMenu.BROADCAST_EVENT = 0
+SquadMenu.SQUAD_LIST = 1
+SquadMenu.SETUP_SQUAD = 2
+SquadMenu.JOIN_SQUAD = 3
+SquadMenu.LEAVE_SQUAD = 4
+SquadMenu.ACCEPT_REQUESTS = 5
+SquadMenu.REQUESTS_LIST = 6
+SquadMenu.KICK = 7
+
+-- Reasons given when a member is removed from a squad
+SquadMenu.LEAVE_REASON_DELETED = 0
+SquadMenu.LEAVE_REASON_LEFT = 1
+SquadMenu.LEAVE_REASON_KICKED = 2
+
+-- Server settings
 CreateConVar(
     "squad_max_members",
     "10",
@@ -88,15 +91,33 @@ function SquadMenu.GetShowCreationMessage()
     return cvar and cvar:GetInt() or 1
 end
 
-function SquadMenu.AllPlayersBySteamID()
-    local all = player.GetHumans()
+function SquadMenu.GetPlayerId( ply )
+    if ply:IsBot() then
+        return "BOT_" .. ply:AccountID()
+    end
+
+    return ply:SteamID()
+end
+
+local PID = SquadMenu.GetPlayerId
+
+function SquadMenu.AllPlayersById()
+    local all = player.GetAll()
     local byId = {}
 
-    for _, p in ipairs( all ) do
-        byId[p:SteamID()] = p
+    for _, ply in ipairs( all ) do
+        byId[PID( ply )] = ply
     end
 
     return byId
+end
+
+function SquadMenu.FindPlayerById( id )
+    local all = player.GetAll()
+
+    for _, ply in ipairs( all ) do
+        if id == PID( ply ) then return ply end
+    end
 end
 
 function SquadMenu.ValidateNumber( n, default, min, max )
@@ -130,12 +151,13 @@ function SquadMenu.WriteTable( t )
     local data = util.Compress( SquadMenu.TableToJSON( t ) )
     local bytes = #data
 
+    net.WriteUInt( bytes, 16 )
+
     if bytes > SquadMenu.MAX_JSON_SIZE then
         SquadMenu.PrintF( "Tried to write JSON that was too big! (%d/%d)", bytes, SquadMenu.MAX_JSON_SIZE )
         return
     end
 
-    net.WriteUInt( bytes, 16 )
     net.WriteData( data )
 end
 
@@ -152,24 +174,19 @@ function SquadMenu.ReadTable()
 end
 
 if SERVER then
-    function SquadMenu.StartEvent( event, data )
-        data = data or {}
-        data.event = event
-
-        SquadMenu.StartCommand( SquadMenu.BROADCAST_EVENT )
-        net.WriteString( SquadMenu.TableToJSON( data ) )
-    end
-
-    resource.AddWorkshop( "3207278246" )
-    util.AddNetworkString( "squad_menu.command" )
+    -- Shared files
+    include( "squad_menu/player.lua" )
+    AddCSLuaFile( "squad_menu/player.lua" )
 
     -- Server files
+    include( "squad_menu/server/main.lua" )
     include( "squad_menu/server/squad.lua" )
     include( "squad_menu/server/network.lua" )
 
     -- Client files
     AddCSLuaFile( "squad_menu/client/theme.lua" )
     AddCSLuaFile( "squad_menu/client/main.lua" )
+    AddCSLuaFile( "squad_menu/client/config.lua" )
     AddCSLuaFile( "squad_menu/client/menu.lua" )
     AddCSLuaFile( "squad_menu/client/hud.lua" )
 
@@ -179,27 +196,17 @@ if SERVER then
 end
 
 if CLIENT then
-    function SquadMenu.GetLanguageText( id )
-        return language.GetPhrase( "squad_menu." .. id ):Trim()
-    end
-
-    function SquadMenu.ChatPrint( ... )
-        chat.AddText( SquadMenu.THEME_COLOR, "[" .. SquadMenu.GetLanguageText( "title" )  .. "] ", Color( 255, 255, 255 ), ... )
-    end
+    -- Shared files
+    include( "squad_menu/player.lua" )
 
     -- Client files
     include( "squad_menu/client/theme.lua" )
     include( "squad_menu/client/main.lua" )
+    include( "squad_menu/client/config.lua" )
     include( "squad_menu/client/menu.lua" )
     include( "squad_menu/client/hud.lua" )
 
     include( "squad_menu/client/vgui/member_status.lua" )
     include( "squad_menu/client/vgui/squad_line.lua" )
     include( "squad_menu/client/vgui/tabbed_frame.lua" )
-end
-
-local PlayerMeta = FindMetaTable( "Player" )
-
-function PlayerMeta:GetSquadID()
-    return self:GetNWInt( "squad_menu.id", -1 )
 end
