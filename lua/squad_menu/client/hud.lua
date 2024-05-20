@@ -59,7 +59,6 @@ function SquadMenu:UpdateMembersHUD()
 
         s.childH = childH
         s.childOffset = childOffset
-
         s:SetSize( w, h )
 
         local position = math.Clamp( SquadMenu.GetMembersPosition(), 1, 9 )
@@ -115,8 +114,7 @@ end
 
 function SquadMenu:AddMemberToHUD( member )
     member.panel = vgui.Create( "Squad_MemberInfo", self.membersPanel )
-    member.panel:SetPlayer( member.id, member.name )
-    member.panel.squad = squad
+    member.panel:SetPlayer( member.id, member.name, squad )
 
     self.membersPanel:InvalidateLayout()
 end
@@ -168,6 +166,7 @@ local Clamp = math.Clamp
 local SetMaterial = surface.SetMaterial
 local DrawTexturedRect = surface.DrawTexturedRect
 local LocalPlayer = LocalPlayer
+local PID = SquadMenu.GetPlayerId
 
 do
     local Start3D2D = cam.Start3D2D
@@ -181,7 +180,7 @@ do
     SquadMenu.DrawRing = function( ply, flags )
         if flags == 1 then return end
         if ply == LocalPlayer() then return end
-        if not squad.membersById[ply:SteamID()] then return end
+        if not squad.membersById[PID( ply )] then return end
 
         local pos = ply:GetPos()
         local mult = Clamp( pos:DistToSqr( EyePos() ) / ringMaxDist, 0, 1 )
@@ -199,16 +198,16 @@ end
 
 ----------
 
-local AllPlayersBySteamID = SquadMenu.AllPlayersBySteamID
+local AllPlayersById = SquadMenu.AllPlayersById
 
 SquadMenu.DrawHalos = function()
     local origin = EyePos()
     local me = LocalPlayer()
-    local players = AllPlayersBySteamID()
+    local byId = AllPlayersById()
     local i, t, dist = 0, {}
 
     for _, member in ipairs( squad.members ) do
-        local ply = players[member.id]
+        local ply = byId[member.id]
 
         if ply and ply ~= me then
             dist = origin:DistToSqr( ply:EyePos() )
@@ -234,7 +233,7 @@ SquadMenu.HideTargetInfo = function()
     local ply = trace.Entity
     if not ply:IsPlayer() then return end
 
-    if squad.membersById[ply:SteamID()] and EyePos():DistToSqr( ply:EyePos() ) < nameDistance then
+    if squad.membersById[PID( ply )] and EyePos():DistToSqr( ply:EyePos() ) < nameDistance then
         return false
     end
 end
@@ -273,11 +272,11 @@ SquadMenu.DrawMemberTags = function()
 
     local origin = EyePos()
     local me = LocalPlayer()
-    local players = AllPlayersBySteamID()
+    local byId = AllPlayersById()
     local dist
 
     for _, member in ipairs( squad.members ) do
-        local ply = players[member.id]
+        local ply = byId[member.id]
 
         if ply and ply ~= me and not ply:IsDormant() then
             dist = origin:DistToSqr( ply:EyePos() )

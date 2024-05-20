@@ -1,7 +1,8 @@
+local PID = SquadMenu.GetPlayerId
 local L = SquadMenu.GetLanguageText
 local ApplyTheme = SquadMenu.Theme.Apply
 
-local function SetListStatus( parent, text )
+local function CreateStatusHeader( parent, text )
     local panel = vgui.Create( "DPanel", parent )
     panel:Dock( FILL )
 
@@ -231,10 +232,8 @@ function SquadMenu:UpdateSquadStatePanel()
         net.SendToServer()
     end
 
-    LocalPlayer():SteamID()
-
     buttonLeave.DoClick = function()
-        if squad.leaderId == LocalPlayer():SteamID() then
+        if squad.leaderId == PID( LocalPlayer() ) then
             Derma_Query( L"leave_leader", L"leave_squad", L"yes", function()
                 Leave()
             end, L"no" )
@@ -251,11 +250,11 @@ function SquadMenu:RequestSquadListUpdate()
     listPanel:Clear()
 
     if self.mySquad then
-        SetListStatus( listPanel, "leave_first" )
+        CreateStatusHeader( listPanel, "leave_first" )
         return
     end
 
-    SetListStatus( listPanel, "fetching_data" )
+    CreateStatusHeader( listPanel, "fetching_data" )
 
     self.StartCommand( self.SQUAD_LIST )
     net.SendToServer()
@@ -268,12 +267,12 @@ function SquadMenu:UpdateSquadList( squads )
     listPanel:Clear()
 
     if self.mySquad then
-        SetListStatus( listPanel, "leave_first" )
+        CreateStatusHeader( listPanel, "leave_first" )
         return
     end
 
     if #squads == 0 then
-        SetListStatus( listPanel, "no_available_squads" )
+        CreateStatusHeader( listPanel, "no_available_squads" )
         return
     end
 
@@ -294,24 +293,24 @@ function SquadMenu:UpdateRequestsPanel()
     if not requestsPanel then return end
 
     requestsPanel:Clear()
-    self.frame:SetTabNotificationCountByIndex( 4, 0 )
+    self.frame:SetTabNotificationCountByIndex( 4, 0 ) -- join requests tab
 
     local squad = self.mySquad
 
     if not squad then
-        SetListStatus( requestsPanel, "not_in_a_squad" )
+        CreateStatusHeader( requestsPanel, "not_in_a_squad" )
         return
     end
 
-    if squad.leaderId ~= LocalPlayer():SteamID() then
-        SetListStatus( requestsPanel, "not_squad_leader" )
+    if squad.leaderId ~= PID( LocalPlayer() ) then
+        CreateStatusHeader( requestsPanel, "not_squad_leader" )
         return
     end
 
     local memberLimit = self.GetMemberLimit() - #squad.members
 
     if memberLimit < 1 then
-        SetListStatus( requestsPanel, "member_limit_reached" )
+        CreateStatusHeader( requestsPanel, "member_limit_reached" )
         return
     end
 
@@ -336,25 +335,25 @@ function SquadMenu:UpdateRequestsPanel()
     UpdateMemberCount( #squad.members )
 
     if squad.isPublic then
-        SetListStatus( requestsPanel, "no_requests_needed" )
+        CreateStatusHeader( requestsPanel, "no_requests_needed" )
         return
     end
 
     if #squad.requests == 0 then
-        SetListStatus( requestsPanel, "no_requests_yet" )
+        CreateStatusHeader( requestsPanel, "no_requests_yet" )
         return
     end
 
-    self.frame:SetTabNotificationCountByIndex( 4, #squad.requests )
+    self.frame:SetTabNotificationCountByIndex( 4, #squad.requests ) -- join requests tab
 
     local buttonAccept
     local acceptedPlayers = {}
 
     local function OnClickAccept()
-        local steamIds = table.GetKeys( acceptedPlayers )
+        local ids = table.GetKeys( acceptedPlayers )
 
         self.StartCommand( self.ACCEPT_REQUESTS )
-        self.WriteTable( steamIds )
+        self.WriteTable( ids )
         net.SendToServer()
     end
 
@@ -417,7 +416,7 @@ function SquadMenu:UpdateRequestsPanel()
         UpdateAcceptedCount( count )
     end
 
-    local players = SquadMenu.AllPlayersBySteamID()
+    local byId = SquadMenu.AllPlayersById()
 
     for _, member in ipairs( squad.requests ) do
         local line = vgui.Create( "DPanel", requestsScroll )
@@ -437,8 +436,8 @@ function SquadMenu:UpdateRequestsPanel()
         avatar:DockMargin( 12, 12, 12, 12 )
         avatar:SetWide( 24 )
 
-        if players[member.id] then
-            avatar:SetPlayer( players[member.id], 64 )
+        if byId[member.id] then
+            avatar:SetPlayer( byId[member.id], 64 )
         end
     end
 end
@@ -452,7 +451,7 @@ function SquadMenu:UpdateSquadMembersPanel()
     local squad = self.mySquad
 
     if not squad then
-        SetListStatus( membersPanel, "not_in_a_squad" )
+        CreateStatusHeader( membersPanel, "not_in_a_squad" )
         return
     end
 
@@ -473,12 +472,12 @@ function SquadMenu:UpdateSquadMembersPanel()
     ApplyTheme( labelStatus )
 
     if memberCount < 2 then
-        SetListStatus( membersPanel, "no_members" )
+        CreateStatusHeader( membersPanel, "no_members" )
         return
     end
 
-    local localSteamId = LocalPlayer():SteamID()
-    local isLocalPlayerLeader = squad.leaderId == localSteamId
+    local localId = PID( LocalPlayer() )
+    local isLocalPlayerLeader = squad.leaderId == localId
 
     local membersScroll = vgui.Create( "DScrollPanel", membersPanel )
     membersScroll:Dock( FILL )
@@ -501,7 +500,7 @@ function SquadMenu:UpdateSquadMembersPanel()
         draw.SimpleText( s._name, "Trebuchet18", 42, h * 0.5, nameColor, 0, 1 )
     end
 
-    local players = SquadMenu.AllPlayersBySteamID()
+    local byId = SquadMenu.AllPlayersById()
 
     for _, member in ipairs( squad.members ) do
         local line = vgui.Create( "DPanel", membersScroll )
@@ -514,7 +513,7 @@ function SquadMenu:UpdateSquadMembersPanel()
         line._name = member.name
         line.Paint = PaintLine
 
-        if isLocalPlayerLeader and member.id ~= localSteamId then
+        if isLocalPlayerLeader and member.id ~= localId then
             local kick = vgui.Create( "DButton", line )
             kick:SetText( L"kick" )
             kick:SizeToContents()
@@ -530,8 +529,8 @@ function SquadMenu:UpdateSquadMembersPanel()
         avatar:Dock( LEFT )
         avatar:SetWide( 24 )
 
-        if players[member.id] then
-            avatar:SetPlayer( players[member.id], 64 )
+        if byId[member.id] then
+            avatar:SetPlayer( byId[member.id], 64 )
         end
     end
 end
@@ -544,8 +543,8 @@ function SquadMenu:UpdateSquadPropertiesPanel()
 
     local squad = self.mySquad
 
-    if squad and squad.leaderId ~= LocalPlayer():SteamID() then
-        SetListStatus( propertiesPanel, "leave_first_create" )
+    if squad and squad.leaderId ~= PID( LocalPlayer() ) then
+        CreateStatusHeader( propertiesPanel, "leave_first_create" )
         return
     end
 
@@ -561,7 +560,7 @@ function SquadMenu:UpdateSquadPropertiesPanel()
 
     if not oldColor then
         local c = HSVToColor( math.random( 0, 360 ), 1, 1 )
-        oldColor = Color( c.r, c.g, c.b ) -- reassign to avoid bug
+        oldColor = Color( c.r, c.g, c.b ) -- reconstruct color to avoid a bug
     end
 
     squad = squad or {

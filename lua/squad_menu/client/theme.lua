@@ -21,6 +21,7 @@ local colors = {
     entryText = Color( 255, 255, 255, 255 ),
 
     labelText = Color( 255, 255, 255, 255 ),
+    indicatorBackground = Color( 200, 0, 0, 255 )
 }
 
 local Theme = SquadMenu.Theme or {

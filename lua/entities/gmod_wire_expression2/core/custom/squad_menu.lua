@@ -33,21 +33,17 @@ end
 
 e2function number getSquadMemberCount( number id )
     local squad = SquadMenu:GetSquad( id )
-    return squad and #squad.members or 0
+    if not squad then return 0 end
+
+    local _, count = squad:GetActiveMembers()
+    return count
 end
 
 e2function array getSquadMembers( number id )
     local squad = SquadMenu:GetSquad( id )
     if not squad then return {} end
 
-    local members = {}
-
-    for _, ply in ipairs( squad.members ) do
-        if IsValid( ply ) then
-            members[#members + 1] = ply
-        end
-    end
-
+    local members = squad:GetActiveMembers()
     return members
 end
 
