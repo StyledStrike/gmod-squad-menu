@@ -150,6 +150,12 @@ function Squad:AddMember( p )
     local name = id
 
     if IsValid( ply ) then
+        local oldSquad = SquadMenu:GetSquad( ply:GetSquadID() )
+
+        if oldSquad then
+            oldSquad:RemoveMember( ply, SquadMenu.LEAVE_REASON_LEFT )
+        end
+
         ply:SetNWInt( "squad_menu.id", self.id )
         name = ply:Nick()
     end

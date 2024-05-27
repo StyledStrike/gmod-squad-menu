@@ -224,37 +224,28 @@ function SquadMenu:UpdateSquadStatePanel()
 
     ApplyTheme( buttonLeave )
 
-    local Leave = function()
-        buttonLeave:SetEnabled( false )
-        buttonLeave:SetText( "..." )
-
-        self.StartCommand( self.LEAVE_SQUAD )
-        net.SendToServer()
-    end
-
     buttonLeave.DoClick = function()
-        if squad.leaderId == PID( LocalPlayer() ) then
-            Derma_Query( L"leave_leader", L"leave_squad", L"yes", function()
-                Leave()
-            end, L"no" )
-        else
-            Leave()
-        end
+        SquadMenu.LeaveMySquad( buttonLeave )
     end
 end
 
-function SquadMenu:RequestSquadListUpdate()
+function SquadMenu:RequestSquadListUpdate( immediate )
+    timer.Remove( "SquadMenu.RequestListUpdate" )
+
     local listPanel = self:GetPanel( "squadList" )
     if not listPanel then return end
 
     listPanel:Clear()
+    CreateStatusHeader( listPanel, "fetching_data" )
 
-    if self.mySquad then
-        CreateStatusHeader( listPanel, "leave_first" )
+    if not immediate then
+        -- Don't spam when this function gets called in quick succession
+        timer.Create( "SquadMenu.RequestListUpdate", 1, 1, function()
+            SquadMenu:RequestSquadListUpdate( true )
+        end )
+
         return
     end
-
-    CreateStatusHeader( listPanel, "fetching_data" )
 
     self.StartCommand( self.SQUAD_LIST )
     net.SendToServer()
@@ -265,11 +256,6 @@ function SquadMenu:UpdateSquadList( squads )
     if not listPanel then return end
 
     listPanel:Clear()
-
-    if self.mySquad then
-        CreateStatusHeader( listPanel, "leave_first" )
-        return
-    end
 
     if #squads == 0 then
         CreateStatusHeader( listPanel, "no_available_squads" )

@@ -70,8 +70,6 @@ commands[SquadMenu.SETUP_SQUAD] = function( ply )
 end
 
 commands[SquadMenu.JOIN_SQUAD] = function( ply )
-    if ply:GetSquadID() ~= -1 then return end
-
     local squadId = net.ReadUInt( 16 )
     local squad = SquadMenu:GetSquad( squadId )
 

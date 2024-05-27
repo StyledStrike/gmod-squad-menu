@@ -14,6 +14,27 @@ function SquadMenu.ChatPrint( ... )
     chat.AddText( SquadMenu.THEME_COLOR, "[" .. L( "title" )  .. "] ", Color( 255, 255, 255 ), ... )
 end
 
+function SquadMenu.LeaveMySquad( buttonToBlank, leaveNow )
+    local squad = SquadMenu.mySquad
+    if not squad then return end
+
+    if not leaveNow and squad.leaderId == SquadMenu.GetPlayerId( LocalPlayer() ) then
+        Derma_Query( L"leave_leader", L"leave_squad", L"yes", function()
+            SquadMenu.LeaveMySquad( buttonToBlank, true )
+        end, L"no" )
+
+        return
+    end
+
+    if IsValid( buttonToBlank ) then
+        buttonToBlank:SetEnabled( false )
+        buttonToBlank:SetText( "..." )
+    end
+
+    SquadMenu.StartCommand( SquadMenu.LEAVE_SQUAD )
+    net.SendToServer()
+end
+
 --- Set the current members of the local player's squad.
 --- Updates the HUD and shows join/leave messages (if `printMessages` is `true`).
 ---
@@ -97,7 +118,7 @@ function SquadMenu:SetupSquad( data )
     self:SetMembers( data.members, isUpdate )
 
     if IsValid( self.frame ) then
-        self:UpdateSquadList()
+        self:RequestSquadListUpdate()
         self:UpdateSquadStatePanel()
         self:UpdateRequestsPanel()
         self:UpdateSquadMembersPanel()
@@ -122,6 +143,7 @@ function SquadMenu:OnLeaveSquad( reason )
     self:RemoveMembersHUD()
 
     if IsValid( self.frame ) then
+        self:RequestSquadListUpdate()
         self:UpdateSquadStatePanel()
         self:UpdateRequestsPanel()
         self:UpdateSquadMembersPanel()
@@ -129,11 +151,6 @@ function SquadMenu:OnLeaveSquad( reason )
 
         if self.frame.lastTabIndex ~= 5 then -- not in settings
             self.frame:SetActiveTabByIndex( 1 ) -- squad list
-        end
-
-        -- Prevent requesting the list update twice when the leader leaves
-        if reason ~= self.LEAVE_REASON_DELETED then
-            self:RequestSquadListUpdate()
         end
     end
 end

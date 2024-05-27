@@ -29,11 +29,15 @@ function PANEL:Init()
     self.buttonJoin:SetTall( 32 )
 
     self.buttonJoin.DoClick = function()
-        UpdateButton( self.buttonJoin, "waiting_response", false )
+        if self.leaveOnClick then
+            SquadMenu.LeaveMySquad( self.buttonJoin )
+        else
+            UpdateButton( self.buttonJoin, "waiting_response", false )
 
-        SquadMenu.StartCommand( SquadMenu.JOIN_SQUAD )
-        net.WriteUInt( self.squad.id, 16 )
-        net.SendToServer()
+            SquadMenu.StartCommand( SquadMenu.JOIN_SQUAD )
+            net.WriteUInt( self.squad.id, 16 )
+            net.SendToServer()
+        end
     end
 
     self.memberCount = vgui.Create( "DPanel", self )
@@ -83,7 +87,11 @@ function PANEL:SetSquad( squad )
     local maxMembers = SquadMenu.GetMemberLimit()
     local count = #squad.members
 
-    if count < maxMembers then
+    self.leaveOnClick = squad.id == ( SquadMenu.mySquad and SquadMenu.mySquad.id or -1 )
+
+    if self.leaveOnClick then
+        UpdateButton( self.buttonJoin, "leave_squad", true )
+    elseif count < maxMembers then
         UpdateButton( self.buttonJoin, squad.isPublic and "join" or "request_to_join", true )
     else
         UpdateButton( self.buttonJoin, "full_squad", false )
