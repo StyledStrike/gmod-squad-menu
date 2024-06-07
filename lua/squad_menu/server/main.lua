@@ -143,7 +143,7 @@ for _, prefix in ipairs( SquadMenu.CHAT_PREFIXES ) do
     prefixes[prefix] = true
 end
 
-hook.Add( "PlayerSay", "SquadMenu.RemovePrefix", function( sender, text )
+hook.Add( "PlayerSay", "SquadMenu.RemovePrefix", function( sender, text, _, channel )
     -- Check for commands to open the menu
     if text[1] == "!" then
         text = string.lower( string.Trim( text ) )
@@ -157,8 +157,10 @@ hook.Add( "PlayerSay", "SquadMenu.RemovePrefix", function( sender, text )
     end
 
     -- Check if this is supposed to be a members-only message
+    local isCustomChatSquadChannel = channel == "squad"
     local parts = string.Explode( " ", text, false )
-    if not parts[1] or not prefixes[parts[1]] then return end
+
+    if not isCustomChatSquadChannel and ( not parts[1] or not prefixes[parts[1]] ) then return end
 
     local id = sender:GetSquadID()
 
@@ -167,7 +169,9 @@ hook.Add( "PlayerSay", "SquadMenu.RemovePrefix", function( sender, text )
         return ""
     end
 
-    table.remove( parts, 1 )
+    if not isCustomChatSquadChannel then
+        table.remove( parts, 1 )
+    end
 
     text = table.concat( parts, " " )
 

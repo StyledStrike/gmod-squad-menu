@@ -10,8 +10,21 @@ end
 
 local L = SquadMenu.GetLanguageText
 
-function SquadMenu.ChatPrint( ... )
+function SquadMenu.GlobalMessage( ... )
     chat.AddText( SquadMenu.THEME_COLOR, "[" .. L( "title" )  .. "] ", Color( 255, 255, 255 ), ... )
+end
+
+function SquadMenu.SquadMessage( ... )
+    local squad = SquadMenu.mySquad
+    if not squad then return end
+
+    local contents = { color_white, "[", squad.color, squad.name, color_white, "] ", ... }
+
+    if CustomChat then
+        CustomChat:AddMessage( contents, "squad" )
+    else
+        chat.AddText( unpack( contents ) )
+    end
 end
 
 function SquadMenu.LeaveMySquad( buttonToBlank, leaveNow )
@@ -59,7 +72,7 @@ function SquadMenu:SetMembers( newMembers, printMessages )
             self:AddMemberToHUD( member )
 
             if printMessages then
-                self.ChatPrint( string.format( L"member_joined", member.name ) )
+                self.SquadMessage( string.format( L"member_joined", member.name ) )
             end
         end
     end
@@ -77,7 +90,7 @@ function SquadMenu:SetMembers( newMembers, printMessages )
             self:RemoveMemberFromHUD( member )
 
             if printMessages then
-                self.ChatPrint( string.format( L"member_left", member.name ) )
+                self.SquadMessage( string.format( L"member_left", member.name ) )
             end
         end
     end
@@ -104,14 +117,18 @@ function SquadMenu:SetupSquad( data )
 
     squad.color = Color( data.r, data.g, data.b )
 
+    if CustomChat and squad.name then
+        CustomChat:CreateCustomChannel( "squad", squad.name, squad.icon )
+    end
+
     if not isUpdate then
         squad.requests = {}
         squad.members = {}
         squad.membersById = {}
 
-        self.ChatPrint( L"squad_welcome", squad.color, " " .. squad.name )
-        self.ChatPrint( L"chat_tip", " " .. table.concat( self.CHAT_PREFIXES, ", " ) )
         self:PlayUISound( "buttons/combine_button3.wav" )
+        self.SquadMessage( L"squad_welcome", squad.color, " " .. squad.name )
+        self.SquadMessage( L"chat_tip", " " .. table.concat( self.CHAT_PREFIXES, ", " ) )
     end
 
     self:UpdateMembersHUD()
@@ -135,7 +152,7 @@ function SquadMenu:OnLeaveSquad( reason )
     }
 
     if self.mySquad then
-        self.ChatPrint( L( reasonText[reason] or "left_squad" ) )
+        self.GlobalMessage( L( reasonText[reason] or "left_squad" ) )
         self:PlayUISound( "buttons/combine_button2.wav" )
     end
 
@@ -152,6 +169,10 @@ function SquadMenu:OnLeaveSquad( reason )
         if self.frame.lastTabIndex ~= 5 then -- not in settings
             self.frame:SetActiveTabByIndex( 1 ) -- squad list
         end
+    end
+
+    if CustomChat then
+        CustomChat:RemoveCustomChannel( "squad" )
     end
 end
 
@@ -196,7 +217,7 @@ commands[SquadMenu.REQUESTS_LIST] = function()
             requests[#requests + 1] = { id = id, name = name }
             newCount = newCount + 1
 
-            SquadMenu.ChatPrint( string.format( L"request_message", name ) )
+            SquadMenu.SquadMessage( string.format( L"request_message", name ) )
         end
     end
 
@@ -251,17 +272,14 @@ commands[SquadMenu.BROADCAST_EVENT] = function()
 
         if event == "squad_created" and data.name and SquadMenu.GetShowCreationMessage() > 0 then
             local color = Color( data.r, data.g, data.b )
-            SquadMenu.ChatPrint( string.format( L"squad_created", data.leaderName ), color, " " .. data.name )
+            SquadMenu.GlobalMessage( string.format( L"squad_created", data.leaderName ), color, " " .. data.name )
         end
 
     elseif event == "members_chat" then
         local squad = SquadMenu.mySquad
         if not squad then return end
 
-        local white = Color( 255, 255, 255 )
-
-        chat.AddText( white, "[", squad.color, squad.name, white, "] ",
-            squad.color, data.senderName, white, ": ", data.text )
+        SquadMenu.SquadMessage( squad.color, data.senderName, color_white, ": ", data.text )
     end
 end
 
