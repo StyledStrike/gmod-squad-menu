@@ -58,7 +58,7 @@ function PANEL:Init()
     local h = math.max( ScrH() * 0.45, 400 )
 
     self:SetTitle( L"title" )
-    self:SetIcon( "icon128/squad_menu.png" )
+    self:SetIcon( "squad_menu/squad_menu.png" )
     self:SetPos( 0, 0 )
     self:SetSize( w, h )
     self:SetSizable( true )

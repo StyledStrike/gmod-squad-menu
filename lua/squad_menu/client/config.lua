@@ -10,6 +10,7 @@ function Config:Reset()
 
     self.nameDistance = 3000
     self.haloDistance = 8000
+    self.pingKey = KEY_B
 end
 
 function Config:Load()
@@ -27,6 +28,7 @@ function Config:Load()
 
     self.nameDistance = SquadMenu.ValidateNumber( data.nameDistance, 3000, 500, 50000 )
     self.haloDistance = SquadMenu.ValidateNumber( data.haloDistance, 8000, 500, 50000 )
+    self.pingKey = math.floor( SquadMenu.ValidateNumber( data.pingKey, KEY_B, 1, 159 ) )
 end
 
 function Config:Save( immediate )
@@ -46,7 +48,8 @@ function Config:Save( immediate )
         showMembers = self.showMembers,
         showRings = self.showRings,
         showHalos = self.showHalos,
-        enableSounds = self.enableSounds
+        enableSounds = self.enableSounds,
+        pingKey = self.pingKey
     } )
 
     SquadMenu.PrintF( "%s: writing %s", path, string.NiceSize( string.len( data ) ) )

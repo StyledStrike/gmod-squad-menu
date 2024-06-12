@@ -237,6 +237,31 @@ commands[SquadMenu.REQUESTS_LIST] = function()
     SquadMenu:UpdateRequestsPanel()
 end
 
+commands[SquadMenu.PING] = function()
+    local pos = net.ReadVector()
+    local label = net.ReadString()
+    local id = net.ReadString()
+
+    local ping = SquadMenu.pings[id]
+
+    if not ping then
+        ping = {}
+    end
+
+    ping.pos = pos
+    ping.label = label
+    ping.start = RealTime()
+    ping.lifetime = 5
+
+    SquadMenu.pings[id] = ping
+
+    local eyePos = EyePos()
+    local soundDir = pos - eyePos
+    soundDir:Normalize()
+
+    sound.Play( "friends/friend_join.wav", eyePos + soundDir * 500, 100, 120, 1 )
+end
+
 commands[SquadMenu.BROADCAST_EVENT] = function()
     local data = SquadMenu.ReadTable()
     local event = data.event
@@ -307,7 +332,7 @@ if engine.ActiveGamemode() == "sandbox" then
         "SquadMenuDesktopIcon",
         {
             title = SquadMenu.GetLanguageText( "title" ),
-            icon = "materials/icon128/squad_menu.png",
+            icon = "materials/squad_menu/squad_menu.png",
             init = function() SquadMenu:OpenFrame() end
         }
     )

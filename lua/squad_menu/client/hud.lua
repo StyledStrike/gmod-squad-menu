@@ -10,8 +10,9 @@ function SquadMenu:RemoveMembersHUD()
 
     hook.Remove( "PrePlayerDraw", "SquadMenu.DrawRing" )
     hook.Remove( "PreDrawHalos", "SquadMenu.DrawHalos" )
-    hook.Remove( "HUDPaint", "SquadMenu.DrawMemberTags" )
+    hook.Remove( "HUDPaint", "SquadMenu.DrawHUD" )
     hook.Remove( "HUDDrawTargetID", "SquadMenu.HideTargetInfo" )
+    hook.Remove( "PlayerButtonDown", "SquadMenu.PingKey" )
 end
 
 function SquadMenu:UpdateMembersHUD()
@@ -33,8 +34,9 @@ function SquadMenu:UpdateMembersHUD()
         hook.Remove( "PreDrawHalos", "SquadMenu.DrawHalos" )
     end
 
-    hook.Add( "HUDPaint", "SquadMenu.DrawMemberTags", self.DrawMemberTags )
+    hook.Add( "HUDPaint", "SquadMenu.DrawHUD", self.DrawHUD )
     hook.Add( "HUDDrawTargetID", "SquadMenu.HideTargetInfo", self.HideTargetInfo )
+    hook.Add( "PlayerButtonDown", "SquadMenu.PingKey", self.PingKey )
 
     if self.membersPanel then
         self.membersPanel:SetVisible( config.showMembers )
@@ -267,9 +269,16 @@ local function DrawTag( ply )
     end
 end
 
-SquadMenu.DrawMemberTags = function()
+local DrawOutlinedText = draw.SimpleTextOutlined
+local pingMat = Material( "squad_menu/ping.png", "smooth ignorez nocull" )
+local pings = SquadMenu.pings or {}
+
+SquadMenu.pings = pings
+
+SquadMenu.DrawHUD = function()
     surface.SetFont( "SquadMenuInfo" )
 
+    -- Draw player tags
     local origin = EyePos()
     local me = LocalPlayer()
     local byId = AllPlayersById()
@@ -288,5 +297,50 @@ SquadMenu.DrawMemberTags = function()
         end
     end
 
+    -- Draw pings
+    local t = RealTime()
+    local sw, sh = ScrW(), ScrH()
+    local r, g, b = squad.color:Unpack()
+    local size = sh * 0.025
+    local border = sh * 0.01
+
+    SetMaterial( pingMat )
+
+    for id, p in pairs( pings ) do
+        if t > p.start + p.lifetime then
+            pings[id] = nil
+        else
+            local showAnim = Clamp( ( t - p.start ) * 6, 0, 1 )
+            local hideAnim = Clamp( p.start + p.lifetime - t, 0, 1 )
+
+            SetAlphaMultiplier( showAnim * hideAnim )
+
+            local pos = p.pos:ToScreen()
+            local x = Clamp( pos.x, border, sw - border )
+            local y = Clamp( pos.y, sh * 0.05, sh - border )
+            local iconY = y - size - ( size * ( 1 - showAnim ) )
+
+            SetColor( 0, 0, 0 )
+            DrawTexturedRect( 1 + x - size * 0.5, 1 + iconY, size, size )
+
+            SetColor( r, g, b )
+            DrawTexturedRect( x - size * 0.5, iconY, size, size )
+            DrawOutlinedText( p.label, "SquadMenuInfo", x, y - size - sh * 0.006, squad.color, 1, 4, 1, color_black )
+        end
+    end
+
     SetAlphaMultiplier( 1 )
+end
+
+SquadMenu.PingKey = function( ply, button )
+    if ply ~= LocalPlayer() then return end
+    if not IsFirstTimePredicted() then return end
+    if button ~= SquadMenu.Config.pingKey then return end
+
+    local tr = ply:GetEyeTrace()
+    if not tr.Hit then return end
+
+    SquadMenu.StartCommand( SquadMenu.PING )
+    net.WriteVector( tr.HitPos )
+    net.SendToServer()
 end

@@ -119,6 +119,25 @@ commands[SquadMenu.KICK] = function( ply )
     end
 end
 
+commands[SquadMenu.PING] = function( ply )
+    local squadId = ply:GetSquadID()
+    if squadId == -1 then return end
+
+    local squad = SquadMenu:GetSquad( squadId )
+    if not squad then return end
+
+    local pos = net.ReadVector()
+
+    local members, count = squad:GetActiveMembers()
+    if count == 0 then return end
+
+    SquadMenu.StartCommand( SquadMenu.PING )
+    net.WriteVector( pos )
+    net.WriteString( ply:Nick() )
+    net.WriteString( ply:SteamID() )
+    net.Send( members )
+end
+
 -- Safeguard against spam
 local cooldowns = {
     [SquadMenu.SQUAD_LIST] = { interval = 0.5, players = {} },
@@ -126,7 +145,8 @@ local cooldowns = {
     [SquadMenu.JOIN_SQUAD] = { interval = 0.1, players = {} },
     [SquadMenu.LEAVE_SQUAD] = { interval = 1, players = {} },
     [SquadMenu.ACCEPT_REQUESTS] = { interval = 0.2, players = {} },
-    [SquadMenu.KICK] = { interval = 0.1, players = {} }
+    [SquadMenu.KICK] = { interval = 0.1, players = {} },
+    [SquadMenu.PING] = { interval = 0.5, players = {} }
 }
 
 net.Receive( "squad_menu.command", function( _, ply )

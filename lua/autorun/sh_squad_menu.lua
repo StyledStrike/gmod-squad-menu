@@ -18,9 +18,9 @@ SquadMenu.MAX_NAME_LENGTH = 30
 SquadMenu.MAX_JSON_SIZE = 49152 -- 48 kibibytes
 
 -- Used on net.WriteUInt for the command ID
-SquadMenu.COMMAND_SIZE = 3
+SquadMenu.COMMAND_SIZE = 4
 
--- Command IDs (Max. ID when COMMAND_SIZE = 3 is 7)
+-- Command IDs (Max. ID when COMMAND_SIZE = 4 is 15)
 SquadMenu.BROADCAST_EVENT = 0
 SquadMenu.SQUAD_LIST = 1
 SquadMenu.SETUP_SQUAD = 2
@@ -29,6 +29,7 @@ SquadMenu.LEAVE_SQUAD = 4
 SquadMenu.ACCEPT_REQUESTS = 5
 SquadMenu.REQUESTS_LIST = 6
 SquadMenu.KICK = 7
+SquadMenu.PING = 8
 
 -- Reasons given when a member is removed from a squad
 SquadMenu.LEAVE_REASON_DELETED = 0

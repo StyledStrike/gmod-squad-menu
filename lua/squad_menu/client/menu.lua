@@ -159,6 +159,31 @@ function SquadMenu:OpenFrame()
         self.Config:Save()
     end
 
+    local panelPing = vgui.Create( "DPanel", scroll )
+    panelPing:SetPaintBackground( false )
+    panelPing:SetTall( 30 )
+    panelPing:Dock( TOP )
+    panelPing:DockMargin( 0, 0, 0, 8 )
+
+    local labelPing = vgui.Create( "DLabel", panelPing )
+    labelPing:SetText( L( "settings.ping_key" ) )
+    labelPing:SizeToContents()
+    labelPing:Dock( LEFT )
+
+    ApplyTheme( labelPing )
+
+    local binderPing = vgui.Create( "DBinder", panelPing )
+    binderPing:SetValue( self.Config.pingKey )
+    binderPing:Dock( FILL )
+    binderPing:DockMargin( 20, 0, 0, 0 )
+
+    ApplyTheme( binderPing )
+
+    binderPing.OnChange = function( _, key )
+        self.Config.pingKey = key
+        self.Config:Save()
+    end
+
     CreateToggleButton( scroll, "settings.show_members", self.Config.showMembers, function( checked )
         self.Config.showMembers = checked
         self.Config:Save()

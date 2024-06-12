@@ -124,6 +124,8 @@ Theme.classes["DButton"] = {
     end
 }
 
+Theme.classes["DBinder"] = Theme.classes["DButton"]
+
 Theme.classes["DTextEntry"] = {
     Prepare = function( self )
         self:SetDrawBorder( false )
