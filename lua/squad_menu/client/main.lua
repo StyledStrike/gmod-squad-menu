@@ -255,6 +255,8 @@ commands[SquadMenu.PING] = function()
 
     SquadMenu.pings[id] = ping
 
+    if not SquadMenu.Config.enableSounds then return end
+
     local eyePos = EyePos()
     local soundDir = pos - eyePos
     soundDir:Normalize()
