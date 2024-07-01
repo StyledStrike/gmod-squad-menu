@@ -61,6 +61,22 @@ hook.Add( "ShouldAllowSquadName", "BlockWordsExample", function( name, leader )
 end )
 ```
 
+You can also override/filter squad-only messages by using the `SquadPlayerSay` hook **on the server**.
+
+```lua
+hook.Add( "SquadPlayerSay", "BlockMessagesExample", function( sender, text )
+    -- When you return false, the message will not be sent.
+    if string.find( text, "amogus" ) then
+        return false
+    end
+
+    -- You can return a string to override the message.
+    if string.find( text, "sus" ) then
+        return string.Replace( text, "sus", "nope" )
+    end
+end )
+```
+
 # Contributing
 
 Before you open a pull request, if it deals with Lua code, please read [this](https://github.com/StyledStrike/gmod-squad-menu/blob/main/.github/pull_request_template.md).

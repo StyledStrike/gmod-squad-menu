@@ -180,6 +180,10 @@ hook.Add( "PlayerSay", "SquadMenu.RemovePrefix", function( sender, text, _, chan
         return ""
     end
 
+    local override = hook.Run( "SquadPlayerSay", sender, text )
+    if override ~= nil and ( not override or override == "" ) then return "" end
+    if type( override ) == "string" then text = override end
+
     local members = SquadMenu:GetSquad( id ):GetActiveMembers()
 
     SquadMenu.StartEvent( "members_chat", {
