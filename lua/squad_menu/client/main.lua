@@ -48,6 +48,23 @@ function SquadMenu.LeaveMySquad( buttonToBlank, leaveNow )
     net.SendToServer()
 end
 
+--- If GMinimap is installed, update squad members' blips.
+function SquadMenu:UpdatePlayerBlips( icon, color )
+    if not self.mySquad then return end
+
+    local me = LocalPlayer()
+    local byId = self.AllPlayersById()
+
+    for _, member in ipairs( self.mySquad.members ) do
+        local ply = byId[member.id]
+
+        if ply and ply ~= me then
+            ply:SetBlipIcon( icon )
+            ply:SetBlipColor( color )
+        end
+    end
+end
+
 --- Set the current members of the local player's squad.
 --- Updates the HUD and shows join/leave messages (if `printMessages` is `true`).
 ---
@@ -77,6 +94,8 @@ function SquadMenu:SetMembers( newMembers, printMessages )
         end
     end
 
+    local byId = self.AllPlayersById()
+
     -- Remove members that we have locally but do not exist on `newMembers`.
     -- Backwards loop because we use `table.remove`
     for i = #members, 1, -1 do
@@ -91,6 +110,13 @@ function SquadMenu:SetMembers( newMembers, printMessages )
 
             if printMessages then
                 self.SquadMessage( string.format( L"member_left", member.name ) )
+            end
+
+            local ply = byId[id]
+
+            if IsValid( ply ) and GMinimap then
+                ply:SetBlipIcon( nil )
+                ply:SetBlipColor( nil )
             end
         end
     end
@@ -143,9 +169,22 @@ function SquadMenu:SetupSquad( data )
 
         self.frame:SetActiveTabByIndex( 3 ) -- squad members
     end
+
+    if GMinimap then
+        self:UpdatePlayerBlips( "gminimap/blips/npc_default.png", squad.color )
+
+        hook.Add( "CanSeePlayerBlip", "ShowSquadBlips", function( ply )
+            if ply:GetSquadID() == squad.id then return true, 50000 end
+        end )
+    end
 end
 
 function SquadMenu:OnLeaveSquad( reason )
+    if GMinimap then
+        self:UpdatePlayerBlips( nil, nil )
+        hook.Remove( "CanSeePlayerBlip", "ShowSquadBlips" )
+    end
+
     local reasonText = {
         [self.LEAVE_REASON_DELETED] = "deleted_squad",
         [self.LEAVE_REASON_KICKED] = "kicked_from_squad"
