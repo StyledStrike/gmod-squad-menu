@@ -1,5 +1,8 @@
 # Simple Squad menu
 
+[![GLuaLint](https://github.com/StyledStrike/gmod-squad-menu/actions/workflows/glualint.yml/badge.svg)](https://github.com/FPtje/GLuaFixer)
+[![Workshop Page](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-steam-workshop.jross.me%2F2656563609%2Fsubscriptions-text)](https://steamcommunity.com/sharedfiles/filedetails/?id=3207278246)
+
 A basic squad/party creation addon for Garry's Mod.
 
 ### Features
