@@ -1,6 +1,6 @@
 local PID = SquadMenu.GetPlayerId
 local L = SquadMenu.GetLanguageText
-local ApplyTheme = SquadMenu.Theme.Apply
+local ApplyTheme = SquadMenu.ApplyTheme
 
 local function CreateStatusHeader( parent, text )
     local panel = vgui.Create( "DPanel", parent )
@@ -246,6 +246,7 @@ function SquadMenu:UpdateSquadStatePanel()
     buttonLeave:SetText( L"leave_squad" )
     buttonLeave:Dock( RIGHT )
     buttonLeave:DockMargin( 4, 0, 0, 0 )
+    buttonLeave:SizeToContents()
 
     ApplyTheme( buttonLeave )
 

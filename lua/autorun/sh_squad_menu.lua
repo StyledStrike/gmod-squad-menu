@@ -185,7 +185,8 @@ if SERVER then
     include( "squad_menu/server/network.lua" )
 
     -- Client files
-    AddCSLuaFile( "squad_menu/client/theme.lua" )
+    AddCSLuaFile( "includes/modules/styled_theme_utils.lua" )
+
     AddCSLuaFile( "squad_menu/client/main.lua" )
     AddCSLuaFile( "squad_menu/client/config.lua" )
     AddCSLuaFile( "squad_menu/client/menu.lua" )
@@ -201,7 +202,18 @@ if CLIENT then
     include( "squad_menu/player.lua" )
 
     -- Client files
-    include( "squad_menu/client/theme.lua" )
+    require( "styled_theme_utils" )
+
+    SquadMenu.Theme = STheme.New( {
+        frameTitleBar = SquadMenu.THEME_COLOR,
+        buttonPress = SquadMenu.THEME_COLOR,
+        entryHighlight = SquadMenu.THEME_COLOR,
+    } )
+
+    function SquadMenu.ApplyTheme( panel, forceClass )
+        STheme.Apply( SquadMenu.Theme, panel, forceClass )
+    end
+
     include( "squad_menu/client/main.lua" )
     include( "squad_menu/client/config.lua" )
     include( "squad_menu/client/menu.lua" )

@@ -1,5 +1,5 @@
 local L = SquadMenu.GetLanguageText
-local colors = SquadMenu.Theme.colors
+local colors = SquadMenu.Theme
 
 local UpdateButton = function( button, text, enabled )
     button:SetEnabled( enabled )
@@ -10,13 +10,14 @@ end
 
 local PANEL = {}
 local DEFAULT_HEIGHT = 48
+local COLOR_BLACK = Color( 0, 0, 0, 255 )
 
 function PANEL:Init()
     self.squad = {
         id = 0,
         name = "-",
         leaderName = "-",
-        color = colors.black
+        color = COLOR_BLACK
     }
 
     self:SetCursor( "hand" )
@@ -45,7 +46,7 @@ function PANEL:Init()
     self.memberCount:SetPaintBackground( false )
     self.memberCount:DockPadding( 4, 0, 4, 0 )
 
-    SquadMenu.Theme.Apply( self.buttonJoin )
+    SquadMenu.ApplyTheme( self.buttonJoin )
 end
 
 function PANEL:PerformLayout( w )
@@ -57,7 +58,7 @@ function PANEL:PerformLayout( w )
 end
 
 function PANEL:Paint( w, h )
-    draw.RoundedBox( 4, 0, 0, w, h, colors.black )
+    draw.RoundedBox( 4, 0, 0, w, h, COLOR_BLACK )
 
     if self:IsHovered() then
         draw.RoundedBox( 4, 0, 0, w, DEFAULT_HEIGHT, colors.buttonBackground )

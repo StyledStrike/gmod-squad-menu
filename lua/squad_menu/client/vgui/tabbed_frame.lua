@@ -1,6 +1,5 @@
 local L = SquadMenu.GetLanguageText
-local ApplyTheme = SquadMenu.Theme.Apply
-local colors = SquadMenu.Theme.colors
+local colors = SquadMenu.Theme
 
 local TabButton = {}
 
@@ -22,6 +21,8 @@ function TabButton:PerformLayout( w, h )
     self.icon:Center()
 end
 
+local COLOR_INDICATOR = Color( 200, 0, 0, 255 )
+
 function TabButton:Paint( w, h )
     if self.isSelected then
         surface.SetDrawColor( colors.buttonPress:Unpack() )
@@ -38,7 +39,7 @@ function TabButton:Paint( w, h )
         local x = w - size - 2
         local y = h - size - 2
 
-        draw.RoundedBox( size * 0.5, x, y, size, size, colors.indicatorBackground )
+        draw.RoundedBox( size * 0.5, x, y, size, size, COLOR_INDICATOR )
         draw.SimpleText( self.notificationCount, "TargetIDSmall", x + size * 0.5, y + size * 0.5, colors.buttonText, 1, 1 )
     end
 end
@@ -73,8 +74,8 @@ function PANEL:Init()
     self.btnMaxim:Remove()
     self.btnMinim:Remove()
 
-    ApplyTheme( self.btnClose )
-    ApplyTheme( self, "DFrame" )
+    SquadMenu.ApplyTheme( self.btnClose )
+    SquadMenu.ApplyTheme( self, "DFrame" )
 
     self.tabList = vgui.Create( "DPanel", self )
     self.tabList:SetWide( 48 )
