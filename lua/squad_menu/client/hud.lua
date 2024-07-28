@@ -211,7 +211,7 @@ SquadMenu.DrawHalos = function()
     for _, member in ipairs( squad.members ) do
         local ply = byId[member.id]
 
-        if ply and ply ~= me then
+        if ply and ply ~= me and ply:Alive() and not ply:IsDormant() then
             dist = origin:DistToSqr( ply:EyePos() )
 
             if dist < haloDistance then
