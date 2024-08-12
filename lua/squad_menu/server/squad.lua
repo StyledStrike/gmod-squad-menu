@@ -173,6 +173,8 @@ function Squad:AddMember( p )
         playerId = id
     } )
     net.Broadcast()
+
+    hook.Run( "SquadMenu_OnJoinedSquad", self.id, ply, id )
 end
 
 --- Remove a player from this squad's members list.
@@ -183,7 +185,10 @@ function Squad:RemoveMember( p, reasonId )
     if not self.membersById[id] then return end
 
     if id == self.leaderId then
+        pcall( hook.Run, "SquadMenu_OnLeftSquad", self.id, ply, id )
+
         self:Delete()
+
         return
     end
 
@@ -199,6 +204,8 @@ function Squad:RemoveMember( p, reasonId )
         net.WriteUInt( reasonId, 3 )
         net.Send( ply )
     end
+
+    hook.Run( "SquadMenu_OnLeftSquad", self.id, ply, id )
 end
 
 --- Add a player to the list of players that
