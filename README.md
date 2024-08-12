@@ -5,7 +5,7 @@
 
 A basic squad/party creation addon for Garry's Mod.
 
-### Features
+## Features
 
 * Create a private or public squad with a custom name, icon and color
 * Players can view all available squads and join/request to join them
@@ -13,7 +13,7 @@ A basic squad/party creation addon for Garry's Mod.
 * Squad members can see the health/armor of all members
 * Squad members have indicators in the world so you can tell who is on your squad
 
-### For developers
+## For developers
 
 You can check a Player's squad by calling this function:
 
@@ -23,7 +23,7 @@ You can check a Player's squad by calling this function:
 local id = Player:GetSquadID()
 ```
 
-You can use this function to get a specific squad instance:
+**On the server only**, you can use this function to get a specific squad instance:
 
 ```lua
 local squad = SquadMenu:GetSquad( id )
@@ -48,6 +48,8 @@ squad:AddMember( p )
 squad:RemoveMember( p, reason ) -- reason is a number from SquadMenu.LEAVE_REASON_*
 ```
 
+### Hook: `ShouldAllowSquadName`
+
 You can also filter the squad name before it's assigned by using the `ShouldAllowSquadName` hook **on the server**.
 
 ```lua
@@ -64,6 +66,8 @@ hook.Add( "ShouldAllowSquadName", "BlockWordsExample", function( name, leader )
 end )
 ```
 
+### Hook: `SquadPlayerSay`
+
 You can also override/filter squad-only messages by using the `SquadPlayerSay` hook **on the server**.
 
 ```lua
@@ -76,6 +80,38 @@ hook.Add( "SquadPlayerSay", "BlockMessagesExample", function( sender, text )
     -- You can return a string to override the message.
     if string.find( text, "sus" ) then
         return string.Replace( text, "sus", "nope" )
+    end
+end )
+```
+
+### Hooks: `SquadMenu_OnJoinedSquad` and `SquadMenu_OnLeftSquad`
+
+You can use these hooks to detect when a player has joined/left a squad **on the server**.
+
+```lua
+hook.Add( "SquadMenu_OnJoinedSquad", "JoinedSquadExample", function( squadId, ply, plySteamID )
+    -- Get the squad instance's name
+    local squadName = SquadMenu:GetSquad( squadId ).name
+
+    -- Get the player name, if the player is not valid then just use their SteamID
+    local playerName = IsValid( ply ) and ply:Nick() or plySteamID
+
+    -- Print a message on everyone's chat
+    for _, p in ipairs( player.GetAll() ) do
+        p:ChatPrint( playerName .. " joined the squad: " .. squadName )
+    end
+end )
+
+hook.Add( "SquadMenu_OnLeftSquad", "LeftSquadExample", function( squadId, ply, plySteamID )
+    -- Get the squad instance's name
+    local squadName = SquadMenu:GetSquad( squadId ).name
+
+    -- Get the player name, if the player is not valid then just use their SteamID
+    local playerName = IsValid( ply ) and ply:Nick() or plySteamID
+
+    -- Print a message on everyone's chat
+    for _, p in ipairs( player.GetAll() ) do
+        p:ChatPrint( playerName .. " left the squad: " .. squadName )
     end
 end )
 ```
