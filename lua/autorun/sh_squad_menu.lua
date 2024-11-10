@@ -37,7 +37,7 @@ SquadMenu.LEAVE_REASON_LEFT = 1
 SquadMenu.LEAVE_REASON_KICKED = 2
 
 -- Server settings
-CreateConVar(
+local maxMembersCvar = CreateConVar(
     "squad_max_members",
     "10",
     FCVAR_ARCHIVE + FCVAR_REPLICATED + FCVAR_NOTIFY,
@@ -45,7 +45,7 @@ CreateConVar(
     1, 100
 )
 
-CreateConVar(
+local squadListPosCvar = CreateConVar(
     "squad_members_position",
     "6",
     FCVAR_ARCHIVE + FCVAR_REPLICATED + FCVAR_NOTIFY,
@@ -53,7 +53,7 @@ CreateConVar(
     1, 9
 )
 
-CreateConVar(
+local broadcastCvar = CreateConVar(
     "squad_broadcast_creation_message",
     "1",
     FCVAR_ARCHIVE + FCVAR_REPLICATED + FCVAR_NOTIFY,
@@ -78,18 +78,15 @@ function SquadMenu.JSONToTable( s )
 end
 
 function SquadMenu.GetMemberLimit()
-    local cvar = GetConVar( "squad_max_members" )
-    return cvar and cvar:GetInt() or 10
+    return maxMembersCvar:GetInt()
 end
 
 function SquadMenu.GetMembersPosition()
-    local cvar = GetConVar( "squad_members_position" )
-    return cvar and cvar:GetInt() or 6
+    return squadListPosCvar:GetInt()
 end
 
 function SquadMenu.GetShowCreationMessage()
-    local cvar = GetConVar( "squad_broadcast_creation_message" )
-    return cvar and cvar:GetInt() or 1
+    return broadcastCvar:GetInt()
 end
 
 function SquadMenu.GetPlayerId( ply )
