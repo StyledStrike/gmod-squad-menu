@@ -61,6 +61,14 @@ local broadcastCvar = CreateConVar(
     0, 1
 )
 
+local friendlyfireCvar = CreateConVar(
+    "squad_force_friendly_fire",
+    "0",
+    FCVAR_ARCHIVE + FCVAR_REPLICATED + FCVAR_NOTIFY,
+    "Makes so squads always have friendly fire enabled.",
+    0, 1
+)
+
 function SquadMenu.PrintF( str, ... )
     MsgC( SquadMenu.THEME_COLOR, "[Squad Menu] ", Color( 255, 255, 255 ), string.format( str, ... ), "\n" )
 end
@@ -86,7 +94,11 @@ function SquadMenu.GetMembersPosition()
 end
 
 function SquadMenu.GetShowCreationMessage()
-    return broadcastCvar:GetInt()
+    return broadcastCvar:GetInt() > 0
+end
+
+function SquadMenu.GetForceFriendlyFire()
+    return friendlyfireCvar:GetInt() > 0
 end
 
 function SquadMenu.GetPlayerId( ply )

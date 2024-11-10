@@ -674,9 +674,15 @@ function SquadMenu:UpdateSquadPropertiesPanel()
         data.isPublic = checked
     end )
 
-    CreateToggleButton( leftPanel, "squad_friendly_fire", data.friendlyFire, function( checked )
+    local ffButton = CreateToggleButton( leftPanel, "squad_friendly_fire", data.friendlyFire, function( checked )
         data.friendlyFire = checked
     end )
+
+    if SquadMenu.GetForceFriendlyFire() then
+        ffButton:SetEnabled( false )
+        ffButton:SetIcon( "icon16/accept.png" )
+        ffButton:SetText( L( "squad_force_friendly_fire" ) )
+    end
 
     CreateToggleButton( leftPanel, "squad_rings", data.enableRings, function( checked )
         data.enableRings = checked

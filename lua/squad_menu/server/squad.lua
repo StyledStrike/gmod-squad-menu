@@ -82,6 +82,10 @@ local ValidateNumber = SquadMenu.ValidateNumber
 
 --- Set the details of this squad using a table.
 function Squad:SetBasicInfo( info )
+    if SquadMenu.GetForceFriendlyFire() then
+        info.friendlyFire = true
+    end
+
     self.name = ValidateString( info.name, "Unnamed", SquadMenu.MAX_NAME_LENGTH )
     self.icon = ValidateString( info.icon, "icon16/flag_blue.png", 256 )
 
