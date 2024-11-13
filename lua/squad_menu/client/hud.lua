@@ -247,25 +247,23 @@ local GetTextSize = surface.GetTextSize
 local SetAlphaMultiplier = surface.SetAlphaMultiplier
 
 local function DrawTag( ply )
-    local text = ply:Nick()
+    local nick = ply:Nick()
     local isAlive = ply:Alive()
 
     local pos = ply:EyePos():ToScreen()
-    local boxW = GetTextSize( text )
+    local boxW, boxH = GetTextSize( nick )
 
-    local h = isAlive and 18 or 28
     local x = pos.x - boxW * 0.5
-    local y = pos.y - 48
+    local y = pos.y - boxH
 
     SetColor( COLORS.BOX_BG:Unpack() )
-    DrawRect( x - 2, y, boxW + 4, h )
-
-    DrawSimpleText( text, "SquadMenuInfo", pos.x, y, COLORS.WHITE, 1, 0 )
+    DrawRect( x - 2, y - 2, boxW + 4, boxH + 6 )
 
     if isAlive then
-        DrawHealthBar( x - 2, y + 16, boxW + 4, 4, Clamp( ply:Health() / 100, 0, 1 ), ply:Armor() / 100 )
+        DrawSimpleText( nick, "SquadMenuInfo", pos.x, y, COLORS.WHITE, 1, 0 )
+        DrawHealthBar( x - 2, y + boxH + 4, boxW + 4, 4, Clamp( ply:Health() / 100, 0, 1 ), ply:Armor() / 100 )
     else
-        DrawSimpleText( "*", "SquadMenuInfo", pos.x, y + 14, COLORS.LOW_HEALTH, 1, 0 )
+        DrawSimpleText( nick, "SquadMenuInfo", pos.x, y, COLORS.LOW_HEALTH, 1, 0 )
     end
 end
 
