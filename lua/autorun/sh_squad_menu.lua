@@ -194,7 +194,7 @@ if SERVER then
     include( "squad_menu/server/network.lua" )
 
     -- Client files
-    AddCSLuaFile( "includes/modules/styled_theme_utils.lua" )
+    AddCSLuaFile( "styledstrike/theme.lua" )
 
     AddCSLuaFile( "squad_menu/client/main.lua" )
     AddCSLuaFile( "squad_menu/client/config.lua" )
@@ -203,7 +203,6 @@ if SERVER then
 
     AddCSLuaFile( "squad_menu/client/vgui/member_status.lua" )
     AddCSLuaFile( "squad_menu/client/vgui/squad_line.lua" )
-    AddCSLuaFile( "squad_menu/client/vgui/tabbed_frame.lua" )
 end
 
 if CLIENT then
@@ -211,17 +210,7 @@ if CLIENT then
     include( "squad_menu/player.lua" )
 
     -- Client files
-    require( "styled_theme_utils" )
-
-    SquadMenu.Theme = STheme.New( {
-        frameTitleBar = SquadMenu.THEME_COLOR,
-        buttonPress = SquadMenu.THEME_COLOR,
-        entryHighlight = SquadMenu.THEME_COLOR,
-    } )
-
-    function SquadMenu.ApplyTheme( panel, forceClass )
-        STheme.Apply( SquadMenu.Theme, panel, forceClass )
-    end
+    include( "styledstrike/theme.lua" )
 
     include( "squad_menu/client/main.lua" )
     include( "squad_menu/client/config.lua" )
@@ -230,5 +219,4 @@ if CLIENT then
 
     include( "squad_menu/client/vgui/member_status.lua" )
     include( "squad_menu/client/vgui/squad_line.lua" )
-    include( "squad_menu/client/vgui/tabbed_frame.lua" )
 end
