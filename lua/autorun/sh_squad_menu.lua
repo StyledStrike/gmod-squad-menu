@@ -202,7 +202,7 @@ if SERVER then
     AddCSLuaFile( "squad_menu/client/hud.lua" )
 
     AddCSLuaFile( "squad_menu/client/vgui/member_status.lua" )
-    AddCSLuaFile( "squad_menu/client/vgui/squad_line.lua" )
+    AddCSLuaFile( "squad_menu/client/vgui/squad_list_row.lua" )
 end
 
 if CLIENT then
@@ -212,11 +212,23 @@ if CLIENT then
     -- Client files
     include( "styledstrike/theme.lua" )
 
+    local fonts = StyledTheme.fonts
+
+    fonts["SquadMenuInfo"] = {
+        screenSize = 0.016,
+        font = "Roboto-Condensed",
+        extended = false,
+        weight = 600,
+        blursize = 0,
+        scanlines = 0,
+        antialias = true
+    }
+
     include( "squad_menu/client/main.lua" )
     include( "squad_menu/client/config.lua" )
     include( "squad_menu/client/menu.lua" )
     include( "squad_menu/client/hud.lua" )
 
     include( "squad_menu/client/vgui/member_status.lua" )
-    include( "squad_menu/client/vgui/squad_line.lua" )
+    include( "squad_menu/client/vgui/squad_list_row.lua" )
 end

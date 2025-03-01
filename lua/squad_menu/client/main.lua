@@ -378,23 +378,3 @@ if engine.ActiveGamemode() == "sandbox" then
         }
     )
 end
-
-hook.Add( "InitPostEntity", "SquadMenu.CreateFont", function()
-    surface.CreateFont( "SquadMenuInfo", {
-        font = "Roboto-Condensed",
-        extended = true,
-        size = math.floor( ScrH() * 0.016 ),
-        weight = 600,
-        blursize = 0,
-        scanlines = 0,
-        antialias = true,
-        underline = false,
-        italic = false,
-        strikeout = false,
-        symbol = false,
-        rotary = false,
-        shadow = false,
-        additive = false,
-        outline = false
-    } )
-end )
