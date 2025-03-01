@@ -209,21 +209,22 @@ if CLIENT then
     -- Shared files
     include( "squad_menu/player.lua" )
 
-    -- Client files
+    -- Setup UI theme
+    hook.Add( "StyledTheme_OnSetupFonts", "SquadMenu.SetupFonts", function( fontData )
+        fontData["SquadMenuInfo"] = {
+            screenSize = 0.016,
+            font = "Roboto-Condensed",
+            extended = false,
+            weight = 600,
+            blursize = 0,
+            scanlines = 0,
+            antialias = true
+        }
+    end )
+
     include( "styledstrike/theme.lua" )
 
-    local fonts = StyledTheme.fonts
-
-    fonts["SquadMenuInfo"] = {
-        screenSize = 0.016,
-        font = "Roboto-Condensed",
-        extended = false,
-        weight = 600,
-        blursize = 0,
-        scanlines = 0,
-        antialias = true
-    }
-
+    -- Client files
     include( "squad_menu/client/main.lua" )
     include( "squad_menu/client/config.lua" )
     include( "squad_menu/client/menu.lua" )

@@ -39,10 +39,10 @@ end
 --[[
     Setup fonts
 ]]
-do
-    StyledTheme.BASE_FONT_NAME = "Roboto"
-    StyledTheme.fonts = StyledTheme.fonts or {}
+StyledTheme.BASE_FONT_NAME = "Roboto"
+StyledTheme.fonts = StyledTheme.fonts or {}
 
+hook.Add( "StyledTheme_OnResolutionChange", "StyledTheme.UpdateFonts", function( _, screenH )
     local fonts = StyledTheme.fonts
 
     fonts["StyledTheme_Small"] = {
@@ -64,10 +64,10 @@ do
         extended = false,
         antialias = true
     }
-end
 
-hook.Add( "StyledTheme_OnResolutionChange", "StyledTheme.UpdateFonts", function( _, screenH )
-    for name, data in pairs( StyledTheme.fonts ) do
+    hook.Run( "StyledTheme_OnSetupFonts", fonts )
+
+    for name, data in pairs( fonts ) do
         data.size = math.floor( screenH * data.screenSize )
         surface.CreateFont( name, data )
     end
@@ -103,8 +103,10 @@ end )
     Watch for changes in screen resolution
 ]]
 do
+    local screenW = StyledTheme.screenW or 0
+    local screenH = StyledTheme.screenH or 0
+
     local Floor = math.floor
-    local screenW, screenH = 0, 0
 
     --- Scales the given size (in pixels) from a 1080p resolution to 
     --- the resolution currently being used by the game.
@@ -112,18 +114,24 @@ do
         return Floor( ( size / 1080 ) * screenH )
     end
 
-    hook.Add( "Initialize", "StyledTheme.CreateFonts", function()
+    -- Update resolution right away
+    local function UpdateResolution()
         screenW, screenH = ScrW(), ScrH()
-        hook.Run( "StyledTheme_OnResolutionChange", screenW, screenH )
-    end )
 
-    -- Detect resolution changes
+        StyledTheme.screenW = screenW
+        StyledTheme.screenH = screenH
+
+        hook.Run( "StyledTheme_OnResolutionChange", screenW, screenH )
+    end
+
+    -- Update on include/autorefresh
+    UpdateResolution()
+
     local ScrW, ScrH = ScrW, ScrH
 
-    timer.Create( "StyledTheme.CheckResolution", 3, 0, function()
+    timer.Create( "StyledTheme.CheckResolution", 2, 0, function()
         if ScrW() ~= screenW or ScrH() ~= screenH then
-            screenW, screenH = ScrW(), ScrH()
-            hook.Run( "StyledTheme_OnResolutionChange", screenW, screenH )
+            UpdateResolution()
         end
     end )
 end
