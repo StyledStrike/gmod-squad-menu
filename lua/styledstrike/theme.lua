@@ -776,7 +776,7 @@ do
         self.tabs = {}
     end
 
-    function TABBED_FRAME:AddTab( icon, tooltip )
+    function TABBED_FRAME:AddTab( icon, tooltip, panelClass )
         local tab = {}
 
         tab.button = vgui.Create( "Styled_TabButton", self.tabList )
@@ -787,11 +787,10 @@ do
         tab.button:DockMargin( 0, 0, 0, 2 )
         tab.button.tab = tab
 
-        tab.panel = vgui.Create( "DScrollPanel", self.contentContainer )
+        tab.panel = vgui.Create( panelClass or "DScrollPanel", self.contentContainer )
         tab.panel:Dock( FILL )
         tab.panel:DockMargin( 0, 0, 0, 0 )
         tab.panel:DockPadding( 0, 0, 0, 0 )
-        tab.panel:SetPaintBackground( false )
         tab.panel:SetVisible( false )
 
         StyledTheme.Apply( tab.panel )
