@@ -1,53 +1,6 @@
 local PID = SquadMenu.GetPlayerId
 local L = SquadMenu.GetLanguageText
-local ApplyTheme = SquadMenu.ApplyTheme
-
-local function CreateStatusHeader( parent, text )
-    local panel = vgui.Create( "DPanel", parent )
-    panel:Dock( FILL )
-
-    ApplyTheme( panel )
-
-    local labelStatus = vgui.Create( "DLabel", panel )
-    labelStatus:SetText( L( text ) )
-    labelStatus:SetContentAlignment( 5 )
-    labelStatus:SizeToContents()
-    labelStatus:Dock( FILL )
-
-    ApplyTheme( labelStatus )
-end
-
-local function CreateToggleButton( parent, label, isChecked, callback )
-    local button = vgui.Create( "DButton", parent )
-    button:SetTall( 30 )
-    button:SetIcon( isChecked and "icon16/accept.png" or "icon16/cancel.png" )
-    button:SetText( L( label ) )
-    button:Dock( TOP )
-    button:DockMargin( 0, 0, 0, 4 )
-    button._isChecked = isChecked
-
-    ApplyTheme( button )
-
-    button.DoClick = function( s )
-        s._isChecked = not s._isChecked
-        button:SetIcon( s._isChecked and "icon16/accept.png" or "icon16/cancel.png" )
-        callback( s._isChecked )
-    end
-
-    return button
-end
-
-local function CreatePropertyLabel( text, parent )
-    local label = vgui.Create( "DLabel", parent )
-    label:Dock( TOP )
-    label:DockMargin( 0, 0, 0, 2 )
-    label:SetText( L( text ) )
-    label:SetTall( 26 )
-
-    ApplyTheme( label )
-
-    return label
-end
+local ScaleSize = StyledTheme.ScaleSize
 
 function SquadMenu:CloseFrame()
     if IsValid( self.frame ) then
@@ -61,7 +14,8 @@ function SquadMenu:OpenFrame()
         return
     end
 
-    local frame = vgui.Create( "Squad_TabbedFrame" )
+    local frame = vgui.Create( "Styled_TabbedFrame" )
+    frame:SetTitle( L"title" )
     frame:Center()
     frame:MakePopup()
 
@@ -69,26 +23,30 @@ function SquadMenu:OpenFrame()
         self.frame = nil
     end
 
+    local h = ScaleSize( 550 )
+    frame:SetTall( h )
+    frame:SetMinHeight( h )
+
     self.frame = frame
 
     local panels = {}
     frame._panels = panels
 
     -- Squad state
-    panels.squadState = vgui.Create( "DPanel", frame )
-    panels.squadState:SetTall( 32 )
-    panels.squadState:Dock( BOTTOM )
-    panels.squadState:DockMargin( 4, 4, 0, 0 )
-    panels.squadState:DockPadding( 4, 4, 4, 4 )
+    local separation = ScaleSize( 4 )
 
-    ApplyTheme( panels.squadState )
+    panels.squadState = vgui.Create( "DPanel", frame )
+    panels.squadState:SetTall( ScaleSize( 40 ) )
+    panels.squadState:Dock( BOTTOM )
+    panels.squadState:DockMargin( separation, separation, 0, 0 )
+    panels.squadState:DockPadding( separation, separation, separation, separation )
 
     -- Tabs
-    panels.squadList = frame:AddTab( "icon16/text_list_bullets.png", L"tab.squad_list" )
-    panels.squadProperties = frame:AddTab( "icon16/flag_blue.png", L"tab.squad_properties" )
-    panels.squadMembers = frame:AddTab( "icon16/group.png", L"tab.squad_members" )
-    panels.joinRequests = frame:AddTab( "icon16/user_add.png", L"tab.join_requests" )
-    panels.settings = frame:AddTab( "icon16/cog.png", L"tab.settings" )
+    panels.squadList = frame:AddTab( "styledstrike/icons/bullet_list.png", L"tab.squad_list" )
+    panels.squadProperties = frame:AddTab( "styledstrike/icons/flag_two_tone.png", L"tab.squad_properties", "DPanel" )
+    panels.squadMembers = frame:AddTab( "styledstrike/icons/users.png", L"tab.squad_members", "DPanel" )
+    panels.joinRequests = frame:AddTab( "styledstrike/icons/user_add.png", L"tab.join_requests", "DPanel" )
+    panels.settings = frame:AddTab( "styledstrike/icons/cog.png", L"tab.settings" )
 
     self:RequestSquadListUpdate()
     self:UpdateSquadStatePanel()
@@ -100,106 +58,48 @@ function SquadMenu:OpenFrame()
 
     if squad then
         if #squad.members < 2 then
-            frame:SetActiveTabByIndex( 4 ) -- join requests
+            frame:SetActiveTabByIndex( 4 ) -- Join requests
         else
-            frame:SetActiveTabByIndex( 3 ) -- squad members
+            frame:SetActiveTabByIndex( 3 ) -- Squad members
         end
     end
 
     -- Settings
-    local panelHeader = vgui.Create( "DPanel", panels.settings )
-    panelHeader:SetTall( 30 )
-    panelHeader:Dock( TOP )
+    StyledTheme.CreateFormHeader( panels.settings, L"tab.settings", 0 )
 
-    ApplyTheme( panelHeader )
-
-    local labelStatus = vgui.Create( "DLabel", panelHeader )
-    labelStatus:SetText( L"tab.settings" )
-    labelStatus:SetContentAlignment( 5 )
-    labelStatus:Dock( FILL )
-
-    ApplyTheme( labelStatus )
-
-    local scroll = vgui.Create( "DScrollPanel", panels.settings )
-    scroll:Dock( FILL )
-    scroll:DockMargin( 0, 4, 0, 0 )
-    scroll.pnlCanvas:DockPadding( 40, 8, 40, 8 )
-
-    ApplyTheme( scroll )
-
-    local sliderNameDist = vgui.Create( "DNumSlider", scroll )
-    sliderNameDist:SetText( L"settings.name_draw_distance" )
-    sliderNameDist:SetMin( 500 )
-    sliderNameDist:SetMax( 50000 )
-    sliderNameDist:SetDecimals( 0 )
-    sliderNameDist:SetValue( self.Config.nameDistance )
-    sliderNameDist:Dock( TOP )
-    sliderNameDist:DockMargin( 0, 0, 0, 8 )
-
-    ApplyTheme( sliderNameDist )
-
-    sliderNameDist.OnValueChanged = function( _, value )
+    StyledTheme.CreateFormSlider( panels.settings, L"settings.name_draw_distance", self.Config.nameDistance, 500, 50000, 0, function( value )
         self.Config.nameDistance = self.ValidateNumber( value, 2000, 500, 50000 )
         self.Config:Save()
-    end
+    end )
 
-    local sliderHaloDist = vgui.Create( "DNumSlider", scroll )
-    sliderHaloDist:SetText( L"settings.halo_draw_distance" )
-    sliderHaloDist:SetMin( 500 )
-    sliderHaloDist:SetMax( 50000 )
-    sliderHaloDist:SetDecimals( 0 )
-    sliderHaloDist:SetValue( self.Config.haloDistance )
-    sliderHaloDist:Dock( TOP )
-    sliderHaloDist:DockMargin( 0, 0, 0, 8 )
-
-    ApplyTheme( sliderHaloDist )
-
-    sliderHaloDist.OnValueChanged = function( _, value )
+    StyledTheme.CreateFormSlider( panels.settings, L"settings.halo_draw_distance", self.Config.haloDistance, 500, 50000, 0, function( value )
         self.Config.haloDistance = self.ValidateNumber( value, 8000, 500, 50000 )
         self.Config:Save()
-    end
+    end )
 
-    local panelPing = vgui.Create( "DPanel", scroll )
-    panelPing:SetPaintBackground( false )
-    panelPing:SetTall( 30 )
-    panelPing:Dock( TOP )
-    panelPing:DockMargin( 0, 0, 0, 8 )
-
-    local labelPing = vgui.Create( "DLabel", panelPing )
-    labelPing:SetText( L( "settings.ping_key" ) )
-    labelPing:SizeToContents()
-    labelPing:Dock( LEFT )
-
-    ApplyTheme( labelPing )
-
-    local binderPing = vgui.Create( "DBinder", panelPing )
-    binderPing:SetValue( self.Config.pingKey )
-    binderPing:Dock( FILL )
-    binderPing:DockMargin( 20, 0, 0, 0 )
-
-    ApplyTheme( binderPing )
+    local binderPing = StyledTheme.CreateFormBinder( panels.settings, L"settings.ping_key", self.Config.pingKey )
 
     binderPing.OnChange = function( _, key )
         self.Config.pingKey = key
         self.Config:Save()
     end
 
-    CreateToggleButton( scroll, "settings.show_members", self.Config.showMembers, function( checked )
+    StyledTheme.CreateFormToggle( panels.settings, L"settings.show_members", self.Config.showMembers, function( checked )
         self.Config.showMembers = checked
         self.Config:Save()
     end )
 
-    CreateToggleButton( scroll, "settings.show_rings", self.Config.showRings, function( checked )
+    StyledTheme.CreateFormToggle( panels.settings, L"settings.show_rings", self.Config.showRings, function( checked )
         self.Config.showRings = checked
         self.Config:Save()
     end )
 
-    CreateToggleButton( scroll, "settings.show_halos", self.Config.showHalos, function( checked )
+    StyledTheme.CreateFormToggle( panels.settings, L"settings.show_halos", self.Config.showHalos, function( checked )
         self.Config.showHalos = checked
         self.Config:Save()
     end )
 
-    CreateToggleButton( scroll, "settings.enable_sounds", self.Config.enableSounds, function( checked )
+    StyledTheme.CreateFormToggle( panels.settings, L"settings.enable_sounds", self.Config.enableSounds, function( checked )
         self.Config.enableSounds = checked
         self.Config:Save()
     end )
@@ -230,25 +130,24 @@ function SquadMenu:UpdateSquadStatePanel()
 
     local imageIcon = vgui.Create( "DImage", statePanel )
     imageIcon:Dock( LEFT )
-    imageIcon:SetWide( 24 )
+    imageIcon:SetWide( ScaleSize( 32 ) )
     imageIcon:SetImage( squad and squad.icon or "vgui/avatar_default" )
 
     local labelName = vgui.Create( "DLabel", statePanel )
     labelName:Dock( FILL )
-    labelName:DockMargin( 8, 0, 0, 0 )
+    labelName:DockMargin( ScaleSize( 8 ), 0, 0, 0 )
     labelName:SetText( squad and squad.name or L"not_in_a_squad" )
 
-    ApplyTheme( labelName )
+    StyledTheme.Apply( labelName )
 
     if not squad then return end
 
     local buttonLeave = vgui.Create( "DButton", statePanel )
     buttonLeave:SetText( L"leave_squad" )
+    buttonLeave:SetWide( ScaleSize( 180 ) )
     buttonLeave:Dock( RIGHT )
-    buttonLeave:DockMargin( 4, 0, 0, 0 )
-    buttonLeave:SizeToContents()
 
-    ApplyTheme( buttonLeave )
+    StyledTheme.Apply( buttonLeave )
 
     buttonLeave.DoClick = function()
         SquadMenu.LeaveMySquad( buttonLeave )
@@ -262,7 +161,8 @@ function SquadMenu:RequestSquadListUpdate( immediate )
     if not listPanel then return end
 
     listPanel:Clear()
-    CreateStatusHeader( listPanel, "fetching_data" )
+
+    StyledTheme.CreateFormHeader( listPanel, L"fetching_data", 0 )
 
     if not immediate then
         -- Don't spam when this function gets called in quick succession
@@ -284,19 +184,17 @@ function SquadMenu:UpdateSquadList( squads )
     listPanel:Clear()
 
     if #squads == 0 then
-        CreateStatusHeader( listPanel, "no_available_squads" )
+        StyledTheme.CreateFormHeader( listPanel, L"no_available_squads", 0 )
         return
     end
 
-    local scrollPanel = vgui.Create( "DScrollPanel", listPanel )
-    scrollPanel:Dock( FILL )
-    scrollPanel.pnlCanvas:DockPadding( 0, 0, 4, 0 )
+    local separation = ScaleSize( 6 )
 
     for _, squad in ipairs( squads ) do
-        local line = vgui.Create( "Squad_Line", scrollPanel )
+        local line = vgui.Create( "Squad_ListRow", listPanel )
         line:SetSquad( squad )
         line:Dock( TOP )
-        line:DockMargin( 0, 0, 0, 4 )
+        line:DockMargin( 0, 0, 0, separation )
     end
 end
 
@@ -305,58 +203,56 @@ function SquadMenu:UpdateRequestsPanel()
     if not requestsPanel then return end
 
     requestsPanel:Clear()
-    self.frame:SetTabNotificationCountByIndex( 4, 0 ) -- join requests tab
+
+    local padding = StyledTheme.dimensions.scrollPadding
+    requestsPanel:DockPadding( padding, padding, padding, padding )
+    requestsPanel:SetPaintBackground( true )
+    requestsPanel:SetBackgroundColor( StyledTheme.colors.scrollBackground )
+
+    self.frame:SetTabNotificationCountByIndex( 4, 0 ) -- Join requests tab
 
     local squad = self.mySquad
 
     if not squad then
-        CreateStatusHeader( requestsPanel, "not_in_a_squad" )
+        StyledTheme.CreateFormHeader( requestsPanel, L"not_in_a_squad", 0 )
         return
     end
 
     if squad.leaderId ~= PID( LocalPlayer() ) then
-        CreateStatusHeader( requestsPanel, "not_squad_leader" )
+        StyledTheme.CreateFormHeader( requestsPanel, L"not_squad_leader", 0 )
         return
     end
 
     local memberLimit = self.GetMemberLimit() - #squad.members
 
     if memberLimit < 1 then
-        CreateStatusHeader( requestsPanel, "member_limit_reached" )
+        StyledTheme.CreateFormHeader( requestsPanel, L"member_limit_reached", 0 )
         return
     end
 
-    local panelHeader = vgui.Create( "DPanel", requestsPanel )
-    panelHeader:SetTall( 30 )
-    panelHeader:Dock( TOP )
-    panelHeader:DockMargin( 0, 0, 0, 4 )
-
-    ApplyTheme( panelHeader )
-
-    local labelStatus = vgui.Create( "DLabel", panelHeader )
-    labelStatus:SetText( L"requests_list" )
-    labelStatus:SetContentAlignment( 5 )
-    labelStatus:Dock( FILL )
-
-    ApplyTheme( labelStatus )
+    local requestsHeaderLabel = StyledTheme.CreateFormHeader( requestsPanel, L"requests_list", 0 ):GetChildren()[1]
 
     local function UpdateMemberCount( current )
-        labelStatus:SetText( L( "slots" ) .. ": " .. current .. "/" .. self.GetMemberLimit() )
+        requestsHeaderLabel:SetText( L( "slots" ) .. ": " .. current .. "/" .. self.GetMemberLimit() )
     end
 
     UpdateMemberCount( #squad.members )
 
     if squad.isPublic then
-        CreateStatusHeader( requestsPanel, "no_requests_needed" )
+        StyledTheme.CreateFormHeader( requestsPanel, L"no_requests_needed", 0 )
         return
     end
 
     if #squad.requests == 0 then
-        CreateStatusHeader( requestsPanel, "no_requests_yet" )
+        StyledTheme.CreateFormHeader( requestsPanel, L"no_requests_yet", 0 )
         return
     end
 
-    self.frame:SetTabNotificationCountByIndex( 4, #squad.requests ) -- join requests tab
+    self.frame:SetTabNotificationCountByIndex( 4, #squad.requests ) -- Join requests tab
+
+    local scrollRequests = vgui.Create( "DScrollPanel", requestsPanel )
+    scrollRequests:Dock( FILL )
+    scrollRequests:SetPaintBackground( false )
 
     local buttonAccept
     local acceptedPlayers = {}
@@ -381,36 +277,17 @@ function SquadMenu:UpdateRequestsPanel()
 
         buttonAccept = vgui.Create( "DButton", requestsPanel )
         buttonAccept:SetText( L"accept" )
-        buttonAccept:SetTall( 36 )
         buttonAccept:Dock( BOTTOM )
-        buttonAccept:DockMargin( 4, 4, 4, 2 )
         buttonAccept.DoClick = OnClickAccept
         buttonAccept._themeHighlight = true
 
-        ApplyTheme( buttonAccept )
+        StyledTheme.Apply( buttonAccept )
     end
 
     UpdateAcceptedCount( 0 )
 
-    local requestsScroll = vgui.Create( "DScrollPanel", requestsPanel )
-    requestsScroll:Dock( FILL )
-    requestsScroll.pnlCanvas:DockPadding( 10, 0, 10, 4 )
-
-    local bgColor = Color( 0, 0, 0 )
-    local nameColor = Color( 255, 255, 255 )
-
-    local PaintLine = function( s, w, h )
-        draw.RoundedBox( 4, 0, 0, w, h, bgColor )
-        draw.SimpleText( s._name, "Trebuchet18", 48, h * 0.5, nameColor, 0, 1 )
-
-        if acceptedPlayers[s._id] then
-            surface.SetDrawColor( 0, 255, 0, 255 )
-            surface.DrawOutlinedRect( 1, 1, w - 2, h - 2, 2 )
-        end
-    end
-
-    local ClickLine = function( s )
-        local id = s._id
+    local function OnClickRow( row )
+        local id = row._id
         local count = #table.GetKeys( acceptedPlayers )
 
         if acceptedPlayers[id] then
@@ -425,28 +302,44 @@ function SquadMenu:UpdateRequestsPanel()
             end
         end
 
+        row.isChecked = acceptedPlayers[id] ~= nil
         UpdateAcceptedCount( count )
     end
 
+    local rowHeight = ScaleSize( 48 )
+    local rowPadding = ScaleSize( 6 )
+    local nameColor = Color( 255, 255, 255 )
+
+    local function OnPaintRow( row, w, h )
+        row._OriginalPaint( row, w, h )
+        draw.SimpleText( row._name, "StyledTheme_Small", rowHeight + rowPadding, h * 0.5, nameColor, 0, 1 )
+    end
+
     local byId = SquadMenu.AllPlayersById()
+    local dimensions = StyledTheme.dimensions
 
     for _, member in ipairs( squad.requests ) do
-        local line = vgui.Create( "DPanel", requestsScroll )
-        line:SetCursor( "hand" )
-        line:SetTall( 28 )
-        line:SetTall( 48 )
-        line:Dock( TOP )
-        line:DockMargin( 0, 0, 0, 2 )
+        local row = vgui.Create( "DButton", scrollRequests )
+        row:SetText( "" )
+        row:Dock( TOP )
+        row:DockMargin( dimensions.formPadding, 0, dimensions.formPadding, dimensions.formSeparator )
+        row:DockPadding( rowPadding, rowPadding, rowPadding, rowPadding )
 
-        line._id = member.id
-        line._name = member.name
-        line.Paint = PaintLine
-        line.OnMousePressed = ClickLine
+        StyledTheme.Apply( row )
 
-        local avatar = vgui.Create( "AvatarImage", line )
+        row._id = member.id
+        row._name = member.name
+        row.isToggle = true
+        row.isChecked = false
+        row.DoClick = OnClickRow
+        row:SetTall( rowHeight )
+
+        row._OriginalPaint = row.Paint
+        row.Paint = OnPaintRow
+
+        local avatar = vgui.Create( "AvatarImage", row )
         avatar:Dock( LEFT )
-        avatar:DockMargin( 12, 12, 12, 12 )
-        avatar:SetWide( 24 )
+        avatar:SetWide( rowHeight - rowPadding * 2 )
 
         if byId[member.id] then
             avatar:SetPlayer( byId[member.id], 64 )
@@ -460,31 +353,24 @@ function SquadMenu:UpdateSquadMembersPanel()
 
     membersPanel:Clear()
 
+    local padding = StyledTheme.dimensions.scrollPadding
+    membersPanel:DockPadding( padding, padding, padding, padding )
+    membersPanel:SetPaintBackground( true )
+    membersPanel:SetBackgroundColor( StyledTheme.colors.scrollBackground )
+
     local squad = self.mySquad
 
     if not squad then
-        CreateStatusHeader( membersPanel, "not_in_a_squad" )
+        StyledTheme.CreateFormHeader( membersPanel, L"not_in_a_squad", 0 )
         return
     end
 
     local memberCount = #squad.members
 
-    local panelHeader = vgui.Create( "DPanel", membersPanel )
-    panelHeader:SetTall( 30 )
-    panelHeader:Dock( TOP )
-    panelHeader:DockMargin( 0, 0, 0, 4 )
-
-    ApplyTheme( panelHeader )
-
-    local labelStatus = vgui.Create( "DLabel", panelHeader )
-    labelStatus:SetText( L( "slots" ) .. ": " .. memberCount .. "/" .. self.GetMemberLimit() )
-    labelStatus:SetContentAlignment( 5 )
-    labelStatus:Dock( FILL )
-
-    ApplyTheme( labelStatus )
+    StyledTheme.CreateFormHeader( membersPanel, L( "slots" ) .. ": " .. memberCount .. "/" .. self.GetMemberLimit(), 0 )
 
     if memberCount < 2 then
-        CreateStatusHeader( membersPanel, "no_members" )
+        StyledTheme.CreateFormHeader( membersPanel, L"no_members", 0 )
         return
     end
 
@@ -493,7 +379,7 @@ function SquadMenu:UpdateSquadMembersPanel()
 
     local membersScroll = vgui.Create( "DScrollPanel", membersPanel )
     membersScroll:Dock( FILL )
-    membersScroll.pnlCanvas:DockPadding( 10, 0, 10, 4 )
+    membersScroll:DockMargin( 0, padding, 0, padding )
 
     local OnClickKick = function( s )
         s:SetEnabled( false )
@@ -504,45 +390,50 @@ function SquadMenu:UpdateSquadMembersPanel()
         net.SendToServer()
     end
 
-    local bgColor = Color( 0, 0, 0 )
-    local nameColor = Color( 255, 255, 255 )
+    local rowHeight = ScaleSize( 48 )
+    local rowPadding = ScaleSize( 6 )
 
-    local PaintLine = function( s, w, h )
-        draw.RoundedBox( 4, 0, 0, w, h, bgColor )
-        draw.SimpleText( s._name, "Trebuchet18", 42, h * 0.5, nameColor, 0, 1 )
+    local colors = StyledTheme.colors
+    local DrawRect = StyledTheme.DrawRect
+
+    local function OnPaintRow( row, w, h )
+        DrawRect( 0, 0, w, h, colors.buttonBorder )
+        DrawRect( 1, 1, w - 2, h - 2, colors.panelBackground )
+
+        draw.SimpleText( row._name, "StyledTheme_Small", rowHeight + rowPadding, h * 0.5, colors.labelText, 0, 1 )
     end
 
     local byId = SquadMenu.AllPlayersById()
+    local dimensions = StyledTheme.dimensions
 
     for _, member in ipairs( squad.members ) do
-        local line = vgui.Create( "DPanel", membersScroll )
-        line:SetTall( 28 )
-        line:SetTall( 48 )
-        line:Dock( TOP )
-        line:DockMargin( 0, 0, 0, 2 )
-        line:DockPadding( 12, 12, 12, 12 )
+        local row = vgui.Create( "Panel", membersScroll )
+        row:Dock( TOP )
+        row:DockMargin( dimensions.formPadding, 0, dimensions.formPadding, dimensions.formSeparator )
+        row:DockPadding( rowPadding, rowPadding, rowPadding, rowPadding )
 
-        line._name = member.name
-        line.Paint = PaintLine
+        row._name = member.name
+        row.Paint = OnPaintRow
+        row:SetTall( rowHeight )
+
+        local avatar = vgui.Create( "AvatarImage", row )
+        avatar:Dock( LEFT )
+        avatar:SetWide( rowHeight - rowPadding * 2 )
+
+        if byId[member.id] then
+            avatar:SetPlayer( byId[member.id], 64 )
+        end
 
         if isLocalPlayerLeader and member.id ~= localId then
-            local kick = vgui.Create( "DButton", line )
+            local kick = vgui.Create( "DButton", row )
             kick:SetText( L"kick" )
-            kick:SizeToContents()
+            kick:SetWide( ScaleSize( 100 ) )
             kick:Dock( RIGHT )
 
             kick._id = member.id
             kick.DoClick = OnClickKick
 
-            ApplyTheme( kick )
-        end
-
-        local avatar = vgui.Create( "AvatarImage", line )
-        avatar:Dock( LEFT )
-        avatar:SetWide( 24 )
-
-        if byId[member.id] then
-            avatar:SetPlayer( byId[member.id], 64 )
+            StyledTheme.Apply( kick )
         end
     end
 end
@@ -553,18 +444,17 @@ function SquadMenu:UpdateSquadPropertiesPanel()
 
     propertiesPanel:Clear()
 
+    local padding = StyledTheme.dimensions.scrollPadding
+    propertiesPanel:DockPadding( padding, padding, padding, padding )
+    propertiesPanel:SetPaintBackground( true )
+    propertiesPanel:SetBackgroundColor( StyledTheme.colors.scrollBackground )
+
     local squad = self.mySquad
 
     if squad and squad.leaderId ~= PID( LocalPlayer() ) then
-        CreateStatusHeader( propertiesPanel, "leave_first_create" )
+        StyledTheme.CreateFormHeader( propertiesPanel, L"leave_first_create", 0 )
         return
     end
-
-    local panelHeader = vgui.Create( "DPanel", propertiesPanel )
-    panelHeader:SetTall( 30 )
-    panelHeader:Dock( TOP )
-
-    ApplyTheme( panelHeader )
 
     local isNew = squad == nil
     local oldName = squad and squad.name or nil
@@ -572,19 +462,14 @@ function SquadMenu:UpdateSquadPropertiesPanel()
 
     if not oldColor then
         local c = HSVToColor( math.random( 0, 360 ), 1, 1 )
-        oldColor = Color( c.r, c.g, c.b ) -- reconstruct color to avoid a bug
+        oldColor = Color( c.r, c.g, c.b ) -- Reconstruct color instance to avoid a bug
     end
 
     squad = squad or {
         enableRings = true
     }
 
-    local labelStatus = vgui.Create( "DLabel", panelHeader )
-    labelStatus:SetText( L( isNew and "create_squad" or "edit_squad" ) )
-    labelStatus:SetContentAlignment( 5 )
-    labelStatus:Dock( FILL )
-
-    ApplyTheme( labelStatus )
+    StyledTheme.CreateFormHeader( propertiesPanel, L( isNew and "create_squad" or "edit_squad" ), 0 )
 
     local data = {
         name = squad.name or string.format( L"default_squad_name", LocalPlayer():Nick() ),
@@ -603,10 +488,9 @@ function SquadMenu:UpdateSquadPropertiesPanel()
     buttonCreate:SetTall( 36 )
     buttonCreate:SetText( L( isNew and "create_squad" or "edit_squad" ) )
     buttonCreate:Dock( BOTTOM )
-    buttonCreate:DockMargin( 0, 4, 0, 0 )
-    buttonCreate._themeHighlight = true
+    buttonCreate:DockMargin( 0, ScaleSize( 8 ), 0, 0 )
 
-    ApplyTheme( buttonCreate )
+    StyledTheme.Apply( buttonCreate )
 
     buttonCreate.DoClick = function( s )
         s:SetEnabled( false )
@@ -619,17 +503,17 @@ function SquadMenu:UpdateSquadPropertiesPanel()
 
     local leftPanel = vgui.Create( "DPanel", propertiesPanel )
     leftPanel:Dock( FILL )
-    leftPanel:DockMargin( 0, 4, 0, 0 )
-    leftPanel:DockPadding( 8, 8, 8, 8 )
 
-    ApplyTheme( leftPanel )
+    StyledTheme.Apply( leftPanel )
+    StyledTheme.CreateFormHeader( leftPanel, L"squad_name", 0, 0 )
 
-    CreatePropertyLabel( "squad_name", leftPanel )
+    local separator = ScaleSize( 6 )
+    local rowHeight = StyledTheme.dimensions.buttonHeight
 
     local entryName = vgui.Create( "DTextEntry", leftPanel )
-    entryName:SetTall( 30 )
+    entryName:SetTall( rowHeight )
     entryName:Dock( TOP )
-    entryName:DockMargin( 0, 0, 0, 4 )
+    entryName:DockMargin( separator, separator, separator, separator )
     entryName:SetMaximumCharCount( self.MAX_NAME_LENGTH )
     entryName:SetValue( data.name )
 
@@ -638,18 +522,17 @@ function SquadMenu:UpdateSquadPropertiesPanel()
         data.name = value:Trim() == "" and oldName or value
     end
 
-    ApplyTheme( entryName )
-
-    CreatePropertyLabel( "tab.squad_properties", leftPanel )
+    StyledTheme.Apply( entryName )
+    StyledTheme.CreateFormHeader( leftPanel, L"tab.squad_properties", 0, 0 )
 
     local buttonIcon = vgui.Create( "DButton", leftPanel )
-    buttonIcon:SetTall( 30 )
+    buttonIcon:SetTall( rowHeight )
     buttonIcon:SetIcon( data.icon )
     buttonIcon:SetText( L"choose_icon" )
     buttonIcon:Dock( TOP )
-    buttonIcon:DockMargin( 0, 0, 0, 4 )
+    buttonIcon:DockMargin( separator, separator, separator, 0 )
 
-    ApplyTheme( buttonIcon )
+    StyledTheme.Apply( buttonIcon )
 
     buttonIcon.DoClick = function()
         local iconBrowser = vgui.Create( "DIconBrowser" )
@@ -670,37 +553,34 @@ function SquadMenu:UpdateSquadPropertiesPanel()
         end
     end
 
-    CreateToggleButton( leftPanel, "squad_is_public", data.isPublic, function( checked )
+    StyledTheme.CreateFormToggle( leftPanel, L"squad_is_public", data.isPublic, function( checked )
         data.isPublic = checked
-    end )
+    end ):DockMargin( separator, separator, separator, 0 )
 
-    local ffButton = CreateToggleButton( leftPanel, "squad_friendly_fire", data.friendlyFire, function( checked )
+    local ffButton = StyledTheme.CreateFormToggle( leftPanel, L"squad_friendly_fire", data.friendlyFire, function( checked )
         data.friendlyFire = checked
-    end )
+    end ):DockMargin( separator, separator, separator, 0 )
 
     if SquadMenu.GetForceFriendlyFire() then
         ffButton:SetEnabled( false )
         ffButton:SetIcon( "icon16/accept.png" )
-        ffButton:SetText( L( "squad_force_friendly_fire" ) )
+        ffButton:SetText( L"squad_force_friendly_fire" )
     end
 
-    CreateToggleButton( leftPanel, "squad_rings", data.enableRings, function( checked )
+    StyledTheme.CreateFormToggle( leftPanel, L"squad_rings", data.enableRings, function( checked )
         data.enableRings = checked
-    end )
+    end ):DockMargin( separator, separator, separator, 0 )
 
     local rightPanel = vgui.Create( "DPanel", propertiesPanel )
-    rightPanel:SetWide( 250 )
+    rightPanel:SetWide( ScaleSize( 260 ) )
     rightPanel:Dock( RIGHT )
-    rightPanel:DockMargin( 0, 4, 0, 0 )
-    rightPanel:DockPadding( 8, 8, 8, 8 )
+    rightPanel:DockMargin( separator, 0, 0, 0 )
 
-    ApplyTheme( rightPanel )
-
-    CreatePropertyLabel( "squad_color", rightPanel )
+    StyledTheme.Apply( rightPanel )
+    StyledTheme.CreateFormHeader( rightPanel, L"squad_color", 0, 0 )
 
     local colorPicker = vgui.Create( "DColorMixer", rightPanel )
-    colorPicker:SetTall( 200 )
-    colorPicker:Dock( TOP )
+    colorPicker:Dock( FILL )
     colorPicker:SetPalette( true )
     colorPicker:SetAlphaBar( false )
     colorPicker:SetWangs( true )

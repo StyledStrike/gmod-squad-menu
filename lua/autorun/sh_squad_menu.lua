@@ -194,7 +194,7 @@ if SERVER then
     include( "squad_menu/server/network.lua" )
 
     -- Client files
-    AddCSLuaFile( "includes/modules/styled_theme_utils.lua" )
+    AddCSLuaFile( "styledstrike/theme.lua" )
 
     AddCSLuaFile( "squad_menu/client/main.lua" )
     AddCSLuaFile( "squad_menu/client/config.lua" )
@@ -202,33 +202,34 @@ if SERVER then
     AddCSLuaFile( "squad_menu/client/hud.lua" )
 
     AddCSLuaFile( "squad_menu/client/vgui/member_status.lua" )
-    AddCSLuaFile( "squad_menu/client/vgui/squad_line.lua" )
-    AddCSLuaFile( "squad_menu/client/vgui/tabbed_frame.lua" )
+    AddCSLuaFile( "squad_menu/client/vgui/squad_list_row.lua" )
 end
 
 if CLIENT then
     -- Shared files
     include( "squad_menu/player.lua" )
 
+    -- Setup UI theme
+    hook.Add( "StyledTheme_OnSetupFonts", "SquadMenu.SetupFonts", function( fontData )
+        fontData["SquadMenuInfo"] = {
+            screenSize = 0.016,
+            font = "Roboto-Condensed",
+            extended = false,
+            weight = 600,
+            blursize = 0,
+            scanlines = 0,
+            antialias = true
+        }
+    end )
+
+    include( "styledstrike/theme.lua" )
+
     -- Client files
-    require( "styled_theme_utils" )
-
-    SquadMenu.Theme = STheme.New( {
-        frameTitleBar = SquadMenu.THEME_COLOR,
-        buttonPress = SquadMenu.THEME_COLOR,
-        entryHighlight = SquadMenu.THEME_COLOR,
-    } )
-
-    function SquadMenu.ApplyTheme( panel, forceClass )
-        STheme.Apply( SquadMenu.Theme, panel, forceClass )
-    end
-
     include( "squad_menu/client/main.lua" )
     include( "squad_menu/client/config.lua" )
     include( "squad_menu/client/menu.lua" )
     include( "squad_menu/client/hud.lua" )
 
     include( "squad_menu/client/vgui/member_status.lua" )
-    include( "squad_menu/client/vgui/squad_line.lua" )
-    include( "squad_menu/client/vgui/tabbed_frame.lua" )
+    include( "squad_menu/client/vgui/squad_list_row.lua" )
 end

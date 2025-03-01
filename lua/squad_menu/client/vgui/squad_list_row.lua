@@ -1,15 +1,14 @@
 local L = SquadMenu.GetLanguageText
-local colors = SquadMenu.Theme
+local ScaleSize = StyledTheme.ScaleSize
 
 local UpdateButton = function( button, text, enabled )
     button:SetEnabled( enabled )
     button:SetText( L( text ) )
-    button:SizeToContentsX( 10 )
+    button:SizeToContentsX( ScaleSize( 12 ) )
     button:GetParent():InvalidateLayout()
 end
 
 local PANEL = {}
-local DEFAULT_HEIGHT = 48
 local COLOR_BLACK = Color( 0, 0, 0, 255 )
 
 function PANEL:Init()
@@ -22,12 +21,19 @@ function PANEL:Init()
 
     self:SetCursor( "hand" )
     self:SetExpanded( false )
+    self.animHover = 0
+
+    self.collapsedHeight = ScaleSize( 52 )
+    self.padding = ScaleSize( 6 )
+    self.iconSize = self.collapsedHeight - self.padding * 2
 
     self.icon = vgui.Create( "DImage", self )
-    self.icon:SetSize( 24, 24 )
+    self.icon:SetSize( self.iconSize, self.iconSize )
 
     self.buttonJoin = vgui.Create( "DButton", self )
-    self.buttonJoin:SetTall( 32 )
+
+    StyledTheme.Apply( self.buttonJoin )
+    self.buttonJoin:SetTall( self.collapsedHeight - self.padding * 2 )
 
     self.buttonJoin.DoClick = function()
         if self.leaveOnClick then
@@ -42,33 +48,36 @@ function PANEL:Init()
     end
 
     self.memberCount = vgui.Create( "DPanel", self )
-    self.memberCount:SetTall( 32 )
+    self.memberCount:SetTall( self.collapsedHeight - self.padding * 2 )
     self.memberCount:SetPaintBackground( false )
-    self.memberCount:DockPadding( 4, 0, 4, 0 )
 
-    SquadMenu.ApplyTheme( self.buttonJoin )
+    self:SetTall( self.collapsedHeight )
 end
 
 function PANEL:PerformLayout( w )
+    self.icon:SetPos( self.padding, self.padding )
+
     local joinWidth = self.buttonJoin:GetWide()
 
-    self.icon:SetPos( 12, 12 )
-    self.buttonJoin:SetPos( w - joinWidth - 4, 8 )
-    self.memberCount:SetPos( w - joinWidth - self.memberCount:GetWide() - 8, 8 )
+    self.buttonJoin:SetPos( w - joinWidth - self.padding, self.padding )
+    self.memberCount:SetPos( w - joinWidth - self.memberCount:GetWide() - self.padding * 2, self.padding )
 end
 
+local colors = StyledTheme.colors
+local DrawRect = StyledTheme.DrawRect
+
 function PANEL:Paint( w, h )
-    draw.RoundedBox( 4, 0, 0, w, h, COLOR_BLACK )
+    self.animHover = Lerp( FrameTime() * 10, self.animHover, self:IsHovered() and 1 or 0 )
 
-    if self:IsHovered() then
-        draw.RoundedBox( 4, 0, 0, w, DEFAULT_HEIGHT, colors.buttonBackground )
-    end
+    DrawRect( 0, 0, w, h, self.squad.color )
+    DrawRect( 1, 1, w - 2, h - 2, COLOR_BLACK )
+    DrawRect( 1, 1, w - 2, h - 2, colors.buttonHover, self.animHover )
 
-    surface.SetDrawColor( self.squad.color:Unpack() )
-    surface.DrawRect( 0, 0, 4, h )
+    local x = self.iconSize + self.padding * 2
+    local y = self.collapsedHeight * 0.5
 
-    draw.SimpleText( self.squad.name, "Trebuchet18", 48, 4 + DEFAULT_HEIGHT * 0.5, colors.buttonText, 0, 4 )
-    draw.SimpleText( self.squad.leaderName or "<Server>", "DefaultSmall", 48, 1 + DEFAULT_HEIGHT * 0.5, colors.buttonTextDisabled, 0, 3 )
+    draw.SimpleText( self.squad.name, "StyledTheme_Small", x, y, colors.labelText, 0, 4 )
+    draw.SimpleText( self.squad.leaderName or "<Server>", "StyledTheme_Tiny", x, y, colors.buttonTextDisabled, 0, 3 )
 end
 
 function PANEL:OnMousePressed( keyCode )
@@ -92,8 +101,10 @@ function PANEL:SetSquad( squad )
 
     if self.leaveOnClick then
         UpdateButton( self.buttonJoin, "leave_squad", true )
+
     elseif count < maxMembers then
         UpdateButton( self.buttonJoin, squad.isPublic and "join" or "request_to_join", true )
+
     else
         UpdateButton( self.buttonJoin, "full_squad", false )
     end
@@ -105,14 +116,13 @@ function PANEL:SetSquad( squad )
     labelCount:SizeToContents()
     labelCount:Dock( FILL )
 
-    local left, _, right = self.memberCount:GetDockPadding()
-    local labelWide = labelCount:GetWide() + left + right + 4
+    local labelWide = labelCount:GetWide()
 
     local iconCount = vgui.Create( "DImage", self.memberCount )
+    iconCount:SetImage( "styledstrike/icons/users.png" )
+    iconCount:SetWide( self.collapsedHeight - self.padding * 4 )
     iconCount:Dock( LEFT )
-    iconCount:DockMargin( 0, 8, 4, 8 )
-    iconCount:SetWide( 16 )
-    iconCount:SetImage( "icon16/user.png" )
+    iconCount:DockMargin( 0, self.padding, 0, self.padding )
 
     self.memberCount:SetWide( labelWide + iconCount:GetWide() )
 end
@@ -120,11 +130,11 @@ end
 function PANEL:SetExpanded( expanded, scroll )
     self.isExpanded = expanded
 
-    local height = DEFAULT_HEIGHT
-    local memberHeight = 30
+    local height = self.collapsedHeight
+    local memberHeight = ScaleSize( 32 )
 
     if expanded then
-        height = height + 4 + memberHeight * math.min( #self.squad.members, 5 )
+        height = height + self.padding + memberHeight * math.min( #self.squad.members, 5 )
     end
 
     self:SetTall( height )
@@ -143,45 +153,47 @@ function PANEL:SetExpanded( expanded, scroll )
 
     local membersScroll = vgui.Create( "DScrollPanel", self )
     membersScroll:Dock( FILL )
-    membersScroll:DockMargin( 0, DEFAULT_HEIGHT, 0, 0 )
-    membersScroll.pnlCanvas:DockPadding( 6, 2, 2, 2 )
+    membersScroll:DockMargin( 0, self.collapsedHeight, 0, 0 )
+    membersScroll.pnlCanvas:DockPadding( 0, 0, 0, 0 )
 
     self.membersScroll = membersScroll
 
     local byId = SquadMenu.AllPlayersById()
+    local separation = ScaleSize( 2 )
+    local padding = ScaleSize( 4 )
 
     for _, m in ipairs( self.squad.members ) do
         local id = m[1]
 
-        local line = vgui.Create( "DPanel", membersScroll )
-        line:SetBackgroundColor( colors.panelBackground )
-        line:SetTall( memberHeight - 2 )
-        line:Dock( TOP )
-        line:DockMargin( 0, 0, 0, 2 )
+        local row = vgui.Create( "DPanel", membersScroll )
+        row:SetBackgroundColor( colors.panelBackground )
+        row:SetTall( memberHeight - separation )
+        row:Dock( TOP )
+        row:DockMargin( self.padding, 0, self.padding, separation )
 
-        local name = vgui.Create( "DLabel", line )
+        local name = vgui.Create( "DLabel", row )
         name:SetText( m[2] )
         name:Dock( FILL )
 
-        local avatar = vgui.Create( "AvatarImage", line )
-        avatar:SetWide( 20 )
+        local avatar = vgui.Create( "AvatarImage", row )
+        avatar:SetWide( memberHeight - padding * 2 )
         avatar:Dock( LEFT )
-        avatar:DockMargin( 4, 4, 4, 4 )
+        avatar:DockMargin( padding, padding, padding, padding )
 
         if byId[id] then
             avatar:SetPlayer( byId[id], 64 )
         end
 
         if id == self.squad.leaderId then
-            line:SetZPos( -1 )
+            row:SetZPos( -1 )
 
-            local leaderIcon = vgui.Create( "DImage", line )
-            leaderIcon:SetWide( 16 )
+            local leaderIcon = vgui.Create( "DImage", row )
+            leaderIcon:SetWide( memberHeight - padding * 2 )
             leaderIcon:SetImage( "icon16/award_star_gold_3.png" )
             leaderIcon:Dock( RIGHT )
-            leaderIcon:DockMargin( 0, 6, 4, 6 )
+            leaderIcon:DockMargin( 0, padding, padding, padding )
         end
     end
 end
 
-vgui.Register( "Squad_Line", PANEL, "DPanel" )
+vgui.Register( "Squad_ListRow", PANEL, "DPanel" )
