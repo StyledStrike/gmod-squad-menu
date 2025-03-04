@@ -559,7 +559,9 @@ function SquadMenu:UpdateSquadPropertiesPanel()
 
     local ffButton = StyledTheme.CreateFormToggle( leftPanel, L"squad_friendly_fire", data.friendlyFire, function( checked )
         data.friendlyFire = checked
-    end ):DockMargin( separator, separator, separator, 0 )
+    end )
+
+    ffButton:DockMargin( separator, separator, separator, 0 )
 
     if SquadMenu.GetForceFriendlyFire() then
         ffButton:SetEnabled( false )
