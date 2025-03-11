@@ -188,6 +188,8 @@ function SquadMenu:UpdateSquadList( squads )
         return
     end
 
+    StyledTheme.CreateFormHeader( listPanel, L"tab.squad_list", 0 )
+
     local separation = ScaleSize( 6 )
 
     for _, squad in ipairs( squads ) do
@@ -205,7 +207,7 @@ function SquadMenu:UpdateRequestsPanel()
     requestsPanel:Clear()
 
     local padding = StyledTheme.dimensions.scrollPadding
-    requestsPanel:DockPadding( padding, padding, padding, padding )
+    requestsPanel:DockPadding( padding, 0, padding, padding )
     requestsPanel:SetPaintBackground( true )
     requestsPanel:SetBackgroundColor( StyledTheme.colors.scrollBackground )
 
@@ -354,7 +356,7 @@ function SquadMenu:UpdateSquadMembersPanel()
     membersPanel:Clear()
 
     local padding = StyledTheme.dimensions.scrollPadding
-    membersPanel:DockPadding( padding, padding, padding, padding )
+    membersPanel:DockPadding( padding, 0, padding, padding )
     membersPanel:SetPaintBackground( true )
     membersPanel:SetBackgroundColor( StyledTheme.colors.scrollBackground )
 
@@ -445,7 +447,7 @@ function SquadMenu:UpdateSquadPropertiesPanel()
     propertiesPanel:Clear()
 
     local padding = StyledTheme.dimensions.scrollPadding
-    propertiesPanel:DockPadding( padding, padding, padding, padding )
+    propertiesPanel:DockPadding( padding, 0, padding, padding )
     propertiesPanel:SetPaintBackground( true )
     propertiesPanel:SetBackgroundColor( StyledTheme.colors.scrollBackground )
 

@@ -194,7 +194,9 @@ if SERVER then
     include( "squad_menu/server/network.lua" )
 
     -- Client files
-    AddCSLuaFile( "styledstrike/theme.lua" )
+    AddCSLuaFile( "includes/modules/styled_theme.lua" )
+    AddCSLuaFile( "includes/modules/styled_theme_tabbed_frame.lua" )
+    AddCSLuaFile( "includes/modules/styled_theme_file_browser.lua" )
 
     AddCSLuaFile( "squad_menu/client/main.lua" )
     AddCSLuaFile( "squad_menu/client/config.lua" )
@@ -210,19 +212,13 @@ if CLIENT then
     include( "squad_menu/player.lua" )
 
     -- Setup UI theme
-    hook.Add( "StyledTheme_OnSetupFonts", "SquadMenu.SetupFonts", function( fontData )
-        fontData["SquadMenuInfo"] = {
-            screenSize = 0.016,
-            font = "Roboto-Condensed",
-            extended = false,
-            weight = 600,
-            blursize = 0,
-            scanlines = 0,
-            antialias = true
-        }
-    end )
+    require( "styled_theme" )
+    require( "styled_theme_tabbed_frame" )
 
-    include( "styledstrike/theme.lua" )
+    StyledTheme.RegisterFont( "SquadMenuInfo", 0.016, {
+        font = "Roboto-Condensed",
+        weight = 600,
+    } )
 
     -- Client files
     include( "squad_menu/client/main.lua" )
