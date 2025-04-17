@@ -196,7 +196,6 @@ if SERVER then
     -- Client files
     AddCSLuaFile( "includes/modules/styled_theme.lua" )
     AddCSLuaFile( "includes/modules/styled_theme_tabbed_frame.lua" )
-    AddCSLuaFile( "includes/modules/styled_theme_file_browser.lua" )
 
     AddCSLuaFile( "squad_menu/client/main.lua" )
     AddCSLuaFile( "squad_menu/client/config.lua" )
