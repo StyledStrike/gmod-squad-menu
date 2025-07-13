@@ -48,7 +48,7 @@ function SquadMenu:OpenFrame()
     panels.joinRequests = frame:AddTab( "styledstrike/icons/user_add.png", L"tab.join_requests", "DPanel" )
     panels.settings = frame:AddTab( "styledstrike/icons/cog.png", L"tab.settings" )
 
-    self:RequestSquadListUpdate()
+    self:RequestSquadListUpdate( true )
     self:UpdateSquadStatePanel()
     self:UpdateRequestsPanel()
     self:UpdateSquadMembersPanel()
