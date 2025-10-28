@@ -5,7 +5,7 @@ function SquadMenu.StartEvent( event, data )
     data.event = event
 
     SquadMenu.StartCommand( SquadMenu.BROADCAST_EVENT )
-    SquadMenu.WriteTable( data )
+    SquadMenu.WriteTable( data, SquadMenu.MAX_SV_TO_CL_JSON_SIZE )
 end
 
 local commands = {}
@@ -19,14 +19,14 @@ commands[SquadMenu.SQUAD_LIST] = function( ply )
     end
 
     SquadMenu.StartCommand( SquadMenu.SQUAD_LIST )
-    SquadMenu.WriteTable( data )
+    SquadMenu.WriteTable( data, SquadMenu.MAX_SV_TO_CL_JSON_SIZE )
     net.Send( ply )
 end
 
 commands[SquadMenu.SETUP_SQUAD] = function( ply )
     local squadId = ply:GetSquadID()
     local plyId = PID( ply )
-    local data = SquadMenu.ReadTable()
+    local data = SquadMenu.ReadTable( SquadMenu.MAX_CL_TO_SV_JSON_SIZE )
 
     if type( data.name ) == "string" then
         local shouldAllow, name = hook.Run( "ShouldAllowSquadName", data.name, ply )
@@ -94,7 +94,7 @@ commands[SquadMenu.ACCEPT_REQUESTS] = function( ply )
     if squadId == -1 then return end
 
     local squad = SquadMenu:GetSquad( squadId )
-    local ids = SquadMenu.ReadTable()
+    local ids = SquadMenu.ReadTable( SquadMenu.MAX_CL_TO_SV_JSON_SIZE )
 
     if squad and squad.leaderId == PID( ply ) then
         squad:AcceptRequests( ids )

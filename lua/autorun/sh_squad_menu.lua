@@ -15,7 +15,8 @@ SquadMenu.THEME_COLOR = Color( 34, 52, 142 )
 SquadMenu.MAX_NAME_LENGTH = 30
 
 -- Size limit for JSON data
-SquadMenu.MAX_JSON_SIZE = 49152 -- 48 kibibytes
+SquadMenu.MAX_SV_TO_CL_JSON_SIZE = 49152 -- 48 kibibytes
+SquadMenu.MAX_CL_TO_SV_JSON_SIZE = 2048 -- 2 kibibytes
 
 -- Used on net.WriteUInt for the command ID
 SquadMenu.COMMAND_SIZE = 4
@@ -157,30 +158,53 @@ function SquadMenu.StartCommand( id )
     net.WriteUInt( id, SquadMenu.COMMAND_SIZE )
 end
 
-function SquadMenu.WriteTable( t )
-    local data = util.Compress( SquadMenu.TableToJSON( t ) )
-    local bytes = #data
+function SquadMenu.WriteTable( t, maxSize )
+    local data = SquadMenu.TableToJSON( t )
+    local len = #data
 
-    net.WriteUInt( bytes, 16 )
-
-    if bytes > SquadMenu.MAX_JSON_SIZE then
-        SquadMenu.PrintF( "Tried to write JSON that was too big! (%d/%d)", bytes, SquadMenu.MAX_JSON_SIZE )
+    if len > maxSize then
+        SquadMenu.PrintF( "Tried to write JSON that was too big! (%d/%d)", len, maxSize )
+        net.WriteUInt( 0, 16 )
         return
     end
 
+    data = util.Compress( data )
+    len = #data
+
+    if len > maxSize then
+        SquadMenu.PrintF( "Tried to write data that was too big! (%d/%d)", len, maxSize )
+        net.WriteUInt( 0, 16 )
+        return
+    end
+
+    net.WriteUInt( len, 16 )
     net.WriteData( data )
 end
 
-function SquadMenu.ReadTable()
-    local bytes = net.ReadUInt( 16 )
+function SquadMenu.ReadTable( maxSize )
+    local len = net.ReadUInt( 16 )
 
-    if bytes > SquadMenu.MAX_JSON_SIZE then
-        SquadMenu.PrintF( "Tried to read JSON that was too big! (%d/%d)", bytes, SquadMenu.MAX_JSON_SIZE )
+    if len < 1 then
         return {}
     end
 
-    local data = net.ReadData( bytes )
-    return SquadMenu.JSONToTable( util.Decompress( data ) )
+    if len > maxSize then
+        SquadMenu.PrintF( "Tried to read data that was too big! (%d/%d)", len, maxSize )
+        return {}
+    end
+
+    local data = net.ReadData( len )
+    if not data then return {} end
+
+    data = util.Decompress( data )
+    if not data then return {} end
+
+    if #data > maxSize then
+        SquadMenu.PrintF( "Tried to read JSON that was too big! (%d/%d)", #data, maxSize )
+        return {}
+    end
+
+    return SquadMenu.JSONToTable( data )
 end
 
 if SERVER then

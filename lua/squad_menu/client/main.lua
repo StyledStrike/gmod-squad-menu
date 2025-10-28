@@ -220,11 +220,11 @@ end
 local commands = {}
 
 commands[SquadMenu.SQUAD_LIST] = function()
-    SquadMenu:UpdateSquadList( SquadMenu.ReadTable() )
+    SquadMenu:UpdateSquadList( SquadMenu.ReadTable( SquadMenu.MAX_SV_TO_CL_JSON_SIZE ) )
 end
 
 commands[SquadMenu.SETUP_SQUAD] = function()
-    local data = SquadMenu.ReadTable()
+    local data = SquadMenu.ReadTable( SquadMenu.MAX_SV_TO_CL_JSON_SIZE )
     SquadMenu:SetupSquad( data )
 end
 
@@ -247,7 +247,7 @@ commands[SquadMenu.REQUESTS_LIST] = function()
     end
 
     -- Compare the new requests against what we already got
-    local requestsById = SquadMenu.ReadTable()
+    local requestsById = SquadMenu.ReadTable( SquadMenu.MAX_SV_TO_CL_JSON_SIZE )
     local newCount = 0
 
     for id, name in pairs( requestsById ) do
@@ -304,7 +304,7 @@ commands[SquadMenu.PING] = function()
 end
 
 commands[SquadMenu.BROADCAST_EVENT] = function()
-    local data = SquadMenu.ReadTable()
+    local data = SquadMenu.ReadTable( SquadMenu.MAX_SV_TO_CL_JSON_SIZE )
     local event = data.event
 
     SquadMenu.PrintF( "Event received: %s", event )

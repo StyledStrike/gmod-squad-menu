@@ -263,7 +263,7 @@ function SquadMenu:UpdateRequestsPanel()
         local ids = table.GetKeys( acceptedPlayers )
 
         self.StartCommand( self.ACCEPT_REQUESTS )
-        self.WriteTable( ids )
+        self.WriteTable( ids, SquadMenu.MAX_CL_TO_SV_JSON_SIZE )
         net.SendToServer()
     end
 
@@ -499,7 +499,7 @@ function SquadMenu:UpdateSquadPropertiesPanel()
         s:SetText( "..." )
 
         self.StartCommand( self.SETUP_SQUAD )
-        self.WriteTable( data )
+        self.WriteTable( data, SquadMenu.MAX_CL_TO_SV_JSON_SIZE )
         net.SendToServer()
     end
 

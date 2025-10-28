@@ -119,7 +119,7 @@ function Squad:SyncWithMembers( immediate )
     local data = self:GetBasicInfo()
 
     SquadMenu.StartCommand( SquadMenu.SETUP_SQUAD )
-    SquadMenu.WriteTable( data )
+    SquadMenu.WriteTable( data, SquadMenu.MAX_SV_TO_CL_JSON_SIZE )
     net.Send( members )
 end
 
@@ -129,7 +129,7 @@ function Squad:SyncRequests()
     if not IsValid( leader ) then return end
 
     SquadMenu.StartCommand( SquadMenu.REQUESTS_LIST )
-    SquadMenu.WriteTable( self.requestsById )
+    SquadMenu.WriteTable( self.requestsById, SquadMenu.MAX_SV_TO_CL_JSON_SIZE )
     net.Send( leader )
 end
 
