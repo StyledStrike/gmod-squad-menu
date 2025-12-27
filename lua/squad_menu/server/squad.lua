@@ -144,6 +144,7 @@ end
 
 --- Add a player as a new member.
 --- `p` can be a player id from `SquadMenu.GetPlayerId` or a player entity.
+--- `ignoreLimit` can be a boolean to ignore the member limit check, useful for external addons.
 function Squad:AddMember( p, ignoreLimit )
     local id, ply = ParsePlayerArg( p )
     if self.membersById[id] then return end
