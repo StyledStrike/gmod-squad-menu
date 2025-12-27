@@ -192,7 +192,7 @@ function Squad:RemoveMember( p, reasonId )
     if id == self.leaderId then
         local members, count = self:GetActiveMembers()
 
-        if count > 0 then
+        if count > 1 then
             -- Pick a new leader
             for _, plyEnt in ipairs( members ) do
                 if plyEnt ~= ply then
