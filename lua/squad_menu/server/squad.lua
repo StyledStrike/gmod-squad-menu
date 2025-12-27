@@ -190,11 +190,23 @@ function Squad:RemoveMember( p, reasonId )
     if not self.membersById[id] then return end
 
     if id == self.leaderId then
-        pcall( hook.Run, "SquadMenu_OnLeftSquad", self.id, ply, id )
+        local members, count = self:GetActiveMembers()
 
-        self:Delete()
+        if count > 0 then
+            -- Pick a new leader
+            for _, plyEnt in ipairs( members ) do
+                if plyEnt ~= ply then
+                    self:SetLeader( plyEnt )
+                    break
+                end
+            end
+        else
+            -- Delete the squad if there are no members left
+            pcall( hook.Run, "SquadMenu_OnLeftSquad", self.id, ply, id )
+            self:Delete()
 
-        return
+            return
+        end
     end
 
     self.membersById[id] = nil
