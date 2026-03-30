@@ -261,7 +261,7 @@ local function DrawTag( ply )
 
     if isAlive then
         DrawSimpleText( nick, "SquadMenuInfo", pos.x, y, COLORS.WHITE, 1, 0 )
-        DrawHealthBar( x - 2, y + boxH + 4, boxW + 4, 4, Clamp( ply:Health() / 100, 0, 1 ), Clamp(ply:Armor() / 100, 0, 1) )
+        DrawHealthBar( x - 2, y + boxH + 4, boxW + 4, 4, Clamp( ply:Health() / 100, 0, 1 ), Clamp( ply:Armor() / 100, 0, 1 ) )
     else
         DrawSimpleText( nick, "SquadMenuInfo", pos.x, y, COLORS.LOW_HEALTH, 1, 0 )
     end
