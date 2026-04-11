@@ -162,7 +162,7 @@ net.Receive( "squad_menu.command", function( _, ply )
     local players = cooldowns[cmd].players
 
     if players[id] and players[id] > t then
-        SquadMenu.PrintF( "%s <%s> sent network commands too fast!", ply:Nick(), id )
+        SquadMenu.PrintF( "%s <%s> sent network command <%s> too fast!", ply:Nick(), id, cmd )
         return
     end
 
