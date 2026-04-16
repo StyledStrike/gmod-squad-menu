@@ -146,7 +146,7 @@ local cooldowns = {
     [SquadMenu.LEAVE_SQUAD] = { interval = 1, players = {} },
     [SquadMenu.ACCEPT_REQUESTS] = { interval = 0.2, players = {} },
     [SquadMenu.KICK] = { interval = 0.1, players = {} },
-    [SquadMenu.PING] = { interval = 0.5, players = {} }
+    [SquadMenu.PING] = { interval = 0.1, players = {} }
 }
 
 net.Receive( "squad_menu.command", function( _, ply )
