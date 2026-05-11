@@ -169,6 +169,13 @@ function SquadMenu.WriteTable( t, maxSize )
     end
 
     data = util.Compress( data )
+
+    if not data then
+        SquadMenu.PrintF( "Failed to write compressed JSON!" )
+        net.WriteUInt( 0, 16 )
+        return
+    end
+    
     len = #data
 
     if len > maxSize then
