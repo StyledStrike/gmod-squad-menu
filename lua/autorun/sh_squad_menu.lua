@@ -175,7 +175,7 @@ function SquadMenu.WriteTable( t, maxSize )
         net.WriteUInt( 0, 16 )
         return
     end
-    
+
     len = #data
 
     if len > maxSize then
